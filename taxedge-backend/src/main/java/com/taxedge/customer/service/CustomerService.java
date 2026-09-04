@@ -1,5 +1,8 @@
 package com.taxedge.customer.service;
 
-/** CustomerService — TODO: implement. */
-public class CustomerService {
+import com.taxedge.customer.dto.CustomerDto;
+
+public interface CustomerService {
+
+    public String registerCustomer(CustomerDto customerDto);
 }
