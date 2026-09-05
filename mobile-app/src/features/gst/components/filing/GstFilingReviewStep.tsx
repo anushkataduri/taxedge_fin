@@ -4,100 +4,133 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../../shared/theme";
 
 interface GstFilingReviewStepProps {
+  gstin?: string;
+  filingMonth?: string;
+  filingType?: string;
+  filingFrequency?: string;
+  uploadedDocsCount?: number;
   onApprove: () => void;
   onRequestChanges?: () => void;
 }
 
 export const GstFilingReviewStep: React.FC<GstFilingReviewStepProps> = ({
+  gstin = "29ABCDE1234F1Z5",
+  filingMonth = "July 2026",
+  filingType = "GSTR-3B (Monthly Summary Return)",
+  filingFrequency = "Monthly",
+  uploadedDocsCount = 3,
   onApprove,
   onRequestChanges,
 }) => {
   return (
     <View style={styles.container}>
-      {/* Green Status Card: Ready for Review */}
+      {/* Ready for Review Banner */}
       <View style={styles.readyCard}>
         <View style={styles.readyIconBox}>
           <Ionicons name="checkmark-sharp" size={16} color="#059669" />
         </View>
         <View style={styles.readyTextCol}>
           <Text style={styles.readyHeading}>Ready for Review</Text>
-          <Text style={styles.readySub}>Our CA has prepared your GSTR-3B return</Text>
+          <Text style={styles.readySub}>
+            TaxEdge CA has prepared return computation based on your uploaded records
+          </Text>
         </View>
       </View>
 
-      {/* 1. Filing Summary Card */}
+      {/* 1. Filing Overview Card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Filing Summary</Text>
+        <Text style={styles.cardTitle}>Filing Details</Text>
         <View style={styles.divider} />
 
         <View style={styles.row}>
-          <Text style={styles.label}>Filing Period</Text>
-          <Text style={styles.value}>July 2026</Text>
-        </View>
-
-        <View style={styles.row}>
           <Text style={styles.label}>GSTIN</Text>
-          <Text style={styles.value}>29PAVAN1234K1Z5</Text>
+          <Text style={styles.value}>{gstin || "Not Provided"}</Text>
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Filing Type</Text>
-          <Text style={styles.value}>GSTR-3B</Text>
+          <Text style={styles.label}>Filing Period</Text>
+          <Text style={styles.value}>{filingMonth}</Text>
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Taxable Turnover</Text>
+          <Text style={styles.label}>Filing Frequency</Text>
+          <Text style={styles.value}>{filingFrequency}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Return Form</Text>
+          <Text style={styles.value}>{filingType.split(" ")[0]}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Attached Documents</Text>
+          <Text style={styles.value}>{uploadedDocsCount} Files Verified</Text>
+        </View>
+      </View>
+
+      {/* 2. Tax Computation Summary */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Tax Computation (Reconciled)</Text>
+        <View style={styles.divider} />
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Gross Taxable Turnover</Text>
           <Text style={styles.value}>₹4,25,000</Text>
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Output GST (CGST + SGST)</Text>
+          <Text style={styles.label}>Output GST (18%)</Text>
           <Text style={styles.value}>₹38,250</Text>
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Input Tax Credit</Text>
-          <Text style={styles.value}>₹22,500</Text>
+          <Text style={styles.label}>Eligible Input Tax Credit (ITC)</Text>
+          <Text style={[styles.value, { color: "#16A34A" }]}>- ₹22,500</Text>
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Net Tax Payable</Text>
+          <Text style={styles.label}>Net Tax Liability (Govt)</Text>
           <Text style={styles.value}>₹15,750</Text>
         </View>
       </View>
 
-      {/* 2. Service Fee Card */}
+      {/* 3. TaxEdge Professional Fee Card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Service Fee</Text>
+        <Text style={styles.cardTitle}>Professional Filing Fee</Text>
         <View style={styles.divider} />
 
         <View style={styles.row}>
-          <Text style={styles.label}>Professional Fee</Text>
-          <Text style={styles.value}>₹2,000</Text>
+          <Text style={styles.label}>CA Consultancy & Reconciliation</Text>
+          <Text style={styles.value}>₹1,986</Text>
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>GST (18%)</Text>
-          <Text style={styles.value}>₹360</Text>
+          <Text style={styles.label}>Platform GST (18%)</Text>
+          <Text style={styles.value}>₹358</Text>
         </View>
 
-        {/* Highlighted Total Payable Row */}
+        {/* Total Payable Row */}
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Payable</Text>
-          <Text style={styles.totalValue}>₹2,360</Text>
+          <Text style={styles.totalValue}>₹2,344</Text>
         </View>
       </View>
 
-      {/* Request Changes Secondary Button */}
+      {/* Secondary Request Changes Button */}
       <TouchableOpacity
         style={styles.requestChangesBtn}
         activeOpacity={0.8}
         onPress={
           onRequestChanges ||
-          (() => Alert.alert("Request Changes", "Your dedicated CA will contact you."))
+          (() =>
+            Alert.alert(
+              "Request CA Review",
+              "A TaxEdge Chartered Accountant will contact you within 15 minutes to adjust any numbers."
+            ))
         }
       >
-        <Text style={styles.requestChangesText}>Request Changes</Text>
+        <Ionicons name="create-outline" size={16} color={BrandColors.PRIMARY_ORANGE} />
+        <Text style={styles.requestChangesText}>Request Changes / Recalculate</Text>
       </TouchableOpacity>
     </View>
   );
@@ -105,8 +138,9 @@ export const GstFilingReviewStep: React.FC<GstFilingReviewStepProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 8,
+    paddingTop: 4,
     gap: 14,
+    paddingBottom: 20,
   },
   readyCard: {
     flexDirection: "row",
@@ -135,8 +169,9 @@ const styles = StyleSheet.create({
   },
   readySub: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(255, 255, 255, 0.85)",
     marginTop: 2,
+    lineHeight: 16,
     fontFamily: Platform.select({ ios: "System", android: "sans-serif" }),
   },
   card: {
@@ -191,7 +226,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: "System", android: "sans-serif-medium" }),
   },
   totalValue: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "800",
     color: BrandColors.PRIMARY_ORANGE,
     fontFamily: Platform.select({ ios: "System", android: "sans-serif-medium" }),
@@ -202,10 +237,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
     borderColor: BrandColors.PRIMARY_ORANGE,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 8,
     marginTop: 4,
-    marginBottom: 10,
   },
   requestChangesText: {
     fontSize: 14,

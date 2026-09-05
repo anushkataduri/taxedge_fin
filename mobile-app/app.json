@@ -39,7 +39,8 @@
           "photosPermission": "TaxEdge uses your photos so you can set a profile picture.",
           "cameraPermission": "TaxEdge uses your camera so you can take a profile picture."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

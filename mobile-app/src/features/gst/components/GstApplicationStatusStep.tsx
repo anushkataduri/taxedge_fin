@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Platform, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, Platform, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { BrandColors } from "../../../shared/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -11,29 +11,61 @@ interface TimelineItem {
   status: "completed" | "active" | "pending";
 }
 
+interface GstApplicationStatusStepProps {
+  appId?: string;
+  appliedDate?: string;
+  businessName?: string;
+  serviceName?: string;
+  estCompletion?: string;
+}
+
 const TIMELINE_STEPS: TimelineItem[] = [
-  { id: "1", title: "New Request", subtitle: "15 Aug 2026, 10:32 AM", status: "completed" },
-  { id: "2", title: "Documents Pending", subtitle: "Checklist sent to customer", status: "completed" },
-  { id: "3", title: "Documents Received", subtitle: "All documents uploaded", status: "completed" },
-  { id: "4", title: "Verification", subtitle: "Documents under verification", status: "active" },
-  { id: "5", title: "Application Prepared", subtitle: "Draft prepared by CA", status: "pending" },
-  { id: "6", title: "Submitted to Department", subtitle: "Filed with GST portal", status: "pending" },
-  { id: "7", title: "ARN Generated", subtitle: "Acknowledgement number issued", status: "pending" },
-  { id: "8", title: "Department Query", subtitle: "If any clarification needed", status: "pending" },
-  { id: "9", title: "GST Approved", subtitle: "Registration approved", status: "pending" },
-  { id: "10", title: "Certificate Delivered", subtitle: "GSTIN & certificate issued", status: "pending" },
+  { id: "1", title: "Application Submitted", subtitle: "Form & documents received", status: "completed" },
+  { id: "2", title: "Document Verification", subtitle: "Assigned CA reviewing proofs", status: "active" },
+  { id: "3", title: "TRN Generation", subtitle: "Temporary Reference Number creation", status: "pending" },
+  { id: "4", title: "Filed with GST Portal", subtitle: "Submission to GST department", status: "pending" },
+  { id: "5", title: "ARN Generated", subtitle: "Acknowledgement number issued", status: "pending" },
+  { id: "6", title: "GST Certificate Issued", subtitle: "GSTIN & certificate delivered", status: "pending" },
 ];
 
-export const GstApplicationStatusStep: React.FC = () => {
+export const GstApplicationStatusStep: React.FC<GstApplicationStatusStepProps> = ({
+  appId = "GST-2026-84920",
+  appliedDate = "Today",
+  businessName = "Your Business",
+  serviceName = "GST Registration",
+  estCompletion = "3-5 Business Days",
+}) => {
   const router = useRouter();
+
+  const handleGoHome = () => {
+    router.replace("/(main)/home");
+  };
+
+  const handleGoApplications = () => {
+    router.replace("/(main)/applications");
+  };
+
   return (
     <View style={styles.container}>
+      {/* Success Celebration Header */}
+      <View style={styles.successBanner}>
+        <View style={styles.successIconCircle}>
+          <Ionicons name="checkmark" size={24} color="#FFFFFF" />
+        </View>
+        <View style={styles.successTextContainer}>
+          <Text style={styles.successTitle}>Application Submitted!</Text>
+          <Text style={styles.successSubtitle}>
+            Your GST application has been successfully filed with TaxEdge.
+          </Text>
+        </View>
+      </View>
+
       {/* Hero Application Status Card */}
       <View style={styles.heroCard}>
         <View style={styles.heroTopRow}>
           <View>
             <Text style={styles.heroAppIdLabel}>APPLICATION ID</Text>
-            <Text style={styles.heroAppIdValue}>GST-2026-00001</Text>
+            <Text style={styles.heroAppIdValue}>{appId}</Text>
           </View>
           <View style={styles.statusBadge}>
             <Text style={styles.statusBadgeText}>Under Verification</Text>
@@ -42,16 +74,18 @@ export const GstApplicationStatusStep: React.FC = () => {
 
         <View style={styles.heroDetailsRow}>
           <View style={styles.heroCol}>
-            <Text style={styles.colLabel}>Service</Text>
-            <Text style={styles.colValue}>GST Registration</Text>
+            <Text style={styles.colLabel}>Business</Text>
+            <Text style={styles.colValue} numberOfLines={1}>
+              {businessName}
+            </Text>
           </View>
           <View style={styles.heroCol}>
             <Text style={styles.colLabel}>Applied On</Text>
-            <Text style={styles.colValue}>15 Aug 2026</Text>
+            <Text style={styles.colValue}>{appliedDate}</Text>
           </View>
           <View style={styles.heroCol}>
             <Text style={styles.colLabel}>Est. Completion</Text>
-            <Text style={styles.colValue}>7-10 Days</Text>
+            <Text style={styles.colValue}>{estCompletion}</Text>
           </View>
         </View>
       </View>
@@ -107,14 +141,35 @@ export const GstApplicationStatusStep: React.FC = () => {
         })}
       </View>
 
-      {/* Contact Support Action Button */}
-      <TouchableOpacity
-        style={styles.contactSupportBtn}
-        activeOpacity={0.8}
-        onPress={() => router.push("/chat/support")}
-      >
-        <Text style={styles.contactSupportBtnText}>Contact Support</Text>
-      </TouchableOpacity>
+      {/* Navigation Buttons */}
+      <View style={styles.actionButtonsCol}>
+        <TouchableOpacity
+          style={styles.primaryHomeBtn}
+          activeOpacity={0.85}
+          onPress={handleGoHome}
+        >
+          <Ionicons name="home" size={18} color="#FFFFFF" />
+          <Text style={styles.primaryHomeBtnText}>Go to Home Dashboard</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.secondaryAppBtn}
+          activeOpacity={0.8}
+          onPress={handleGoApplications}
+        >
+          <Ionicons name="folder-open-outline" size={18} color={BrandColors.PRIMARY_BLUE} />
+          <Text style={styles.secondaryAppBtnText}>Track in My Applications</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.contactSupportBtn}
+          activeOpacity={0.8}
+          onPress={() => router.push("/chat/support")}
+        >
+          <Ionicons name="chatbubbles-outline" size={17} color="#64748B" />
+          <Text style={styles.contactSupportBtnText}>Contact Support / CA</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -122,7 +177,40 @@ export const GstApplicationStatusStep: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     paddingTop: 4,
-    paddingBottom: 24,
+    paddingBottom: 20,
+  },
+  successBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ECFDF5",
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+    gap: 12,
+  },
+  successIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#10B981",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  successTextContainer: {
+    flex: 1,
+  },
+  successTitle: {
+    fontSize: 14.5,
+    fontWeight: "700",
+    color: "#065F46",
+  },
+  successSubtitle: {
+    fontSize: 12,
+    color: "#047857",
+    marginTop: 2,
+    lineHeight: 16,
   },
   heroCard: {
     backgroundColor: BrandColors.PRIMARY_BLUE,
@@ -200,7 +288,7 @@ const styles = StyleSheet.create({
   },
   timelineRow: {
     flexDirection: "row",
-    minHeight: 52,
+    minHeight: 50,
   },
   timelineLeftCol: {
     alignItems: "center",
@@ -276,20 +364,62 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontFamily: Platform.select({ ios: "System", android: "sans-serif" }),
   },
-  contactSupportBtn: {
-    width: "100%",
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1.5,
-    borderColor: BrandColors.PRIMARY_ORANGE,
+  actionButtonsCol: {
+    gap: 10,
+    marginTop: 4,
+  },
+  primaryHomeBtn: {
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: BrandColors.PRIMARY_ORANGE,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 8,
+    shadowColor: BrandColors.PRIMARY_ORANGE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  contactSupportBtnText: {
+  primaryHomeBtnText: {
     fontSize: 14.5,
     fontWeight: "700",
-    color: BrandColors.PRIMARY_ORANGE,
+    color: "#FFFFFF",
     fontFamily: Platform.select({ ios: "System", android: "sans-serif-medium" }),
+  },
+  secondaryAppBtn: {
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EAF1FE",
+    borderWidth: 1,
+    borderColor: "rgba(8, 59, 117, 0.15)",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  secondaryAppBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: BrandColors.PRIMARY_BLUE,
+    fontFamily: Platform.select({ ios: "System", android: "sans-serif-medium" }),
+  },
+  contactSupportBtn: {
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+  },
+  contactSupportBtnText: {
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: "#64748B",
+    fontFamily: Platform.select({ ios: "System", android: "sans-serif" }),
   },
 });

@@ -33,15 +33,36 @@ export interface GstPersonalFormData {
 interface GstPersonalStepProps {
   data: GstPersonalFormData;
   onChange: (fields: Partial<GstPersonalFormData>) => void;
+  onBlurField?: (field: keyof GstPersonalFormData) => void;
   errors?: Record<string, string>;
 }
 
 export const GstPersonalStep: React.FC<GstPersonalStepProps> = ({
   data,
   onChange,
+  onBlurField,
   errors = {},
 }) => {
   const [showTypeModal, setShowTypeModal] = useState(false);
+
+  const handlePanChange = (text: string) => {
+    const cleaned = text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    onChange({ panNumber: cleaned });
+  };
+
+  const handleAadhaarChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    onChange({ aadhaarNumber: cleaned });
+  };
+
+  const handleMobileChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    onChange({ mobileNumber: cleaned });
+  };
+
+  const handleEmailChange = (text: string) => {
+    onChange({ emailAddress: text.trim() });
+  };
 
   return (
     <View style={styles.container}>
@@ -60,10 +81,11 @@ export const GstPersonalStep: React.FC<GstPersonalStepProps> = ({
         <Text style={styles.label}>PAN Number *</Text>
         <TextInput
           style={[styles.input, errors.panNumber && styles.inputError]}
-          placeholder="ABCDE1234F"
+          placeholder="e.g. ABCDE1234F"
           placeholderTextColor="#94A3B8"
           value={data.panNumber}
-          onChangeText={(t) => onChange({ panNumber: t.toUpperCase() })}
+          onChangeText={handlePanChange}
+          onBlur={() => onBlurField?.("panNumber")}
           autoCapitalize="characters"
           maxLength={10}
         />
@@ -77,12 +99,13 @@ export const GstPersonalStep: React.FC<GstPersonalStepProps> = ({
         <Text style={styles.label}>Aadhaar Number *</Text>
         <TextInput
           style={[styles.input, errors.aadhaarNumber && styles.inputError]}
-          placeholder="XXXX XXXX XXXX"
+          placeholder="Enter 12-digit Aadhaar Number"
           placeholderTextColor="#94A3B8"
           value={data.aadhaarNumber}
-          onChangeText={(t) => onChange({ aadhaarNumber: t })}
+          onChangeText={handleAadhaarChange}
+          onBlur={() => onBlurField?.("aadhaarNumber")}
           keyboardType="numeric"
-          maxLength={14}
+          maxLength={12}
         />
         {errors.aadhaarNumber ? (
           <Text style={styles.errorText}>{errors.aadhaarNumber}</Text>
@@ -94,12 +117,13 @@ export const GstPersonalStep: React.FC<GstPersonalStepProps> = ({
         <Text style={styles.label}>Mobile Number *</Text>
         <TextInput
           style={[styles.input, errors.mobileNumber && styles.inputError]}
-          placeholder="+91 XXXXX XXXXX"
+          placeholder="Enter 10-digit mobile number"
           placeholderTextColor="#94A3B8"
           value={data.mobileNumber}
-          onChangeText={(t) => onChange({ mobileNumber: t })}
+          onChangeText={handleMobileChange}
+          onBlur={() => onBlurField?.("mobileNumber")}
           keyboardType="phone-pad"
-          maxLength={13}
+          maxLength={10}
         />
         {errors.mobileNumber ? (
           <Text style={styles.errorText}>{errors.mobileNumber}</Text>
@@ -111,10 +135,11 @@ export const GstPersonalStep: React.FC<GstPersonalStepProps> = ({
         <Text style={styles.label}>Email Address *</Text>
         <TextInput
           style={[styles.input, errors.emailAddress && styles.inputError]}
-          placeholder="email@business.com"
+          placeholder="name@domain.com"
           placeholderTextColor="#94A3B8"
           value={data.emailAddress}
-          onChangeText={(t) => onChange({ emailAddress: t })}
+          onChangeText={handleEmailChange}
+          onBlur={() => onBlurField?.("emailAddress")}
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -132,6 +157,7 @@ export const GstPersonalStep: React.FC<GstPersonalStepProps> = ({
           placeholderTextColor="#94A3B8"
           value={data.businessName}
           onChangeText={(t) => onChange({ businessName: t })}
+          onBlur={() => onBlurField?.("businessName")}
         />
         {errors.businessName ? (
           <Text style={styles.errorText}>{errors.businessName}</Text>

@@ -121,7 +121,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ item, onPress }) => {
         </View>
 
         {/* Right Action / Badges */}
-        <View style={styles.rightCol}>
+        <View style={[styles.rightCol, (!item.badgeText && !item.rateText) && styles.rightColCentered]}>
           {item.badgeText && (
             <View
               style={[
@@ -146,9 +146,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ item, onPress }) => {
 
           <Ionicons
             name="chevron-forward"
-            size={15}
+            size={18}
             color="#94A3B8"
-            style={styles.chevron}
+            style={(!item.badgeText && !item.rateText) ? styles.chevronCentered : styles.chevron}
           />
         </View>
       </View>
@@ -245,6 +245,12 @@ const styles = StyleSheet.create({
     height: 48,
     marginLeft: 8,
   },
+  rightColCentered: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 48,
+    width: 24,
+  },
   badgePill: {
     backgroundColor: "#FEF0E6",
     paddingHorizontal: 11,
@@ -264,6 +270,9 @@ const styles = StyleSheet.create({
   },
   chevron: {
     marginTop: "auto",
+  },
+  chevronCentered: {
+    marginTop: 0,
   },
 });
 
