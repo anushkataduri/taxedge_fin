@@ -27,4 +27,3 @@ export type {
   GstCertificatePayload,
   GstCertificateRecord,
 } from './types/gst.types'
-

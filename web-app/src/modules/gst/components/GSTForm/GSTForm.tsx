@@ -32,19 +32,25 @@ export const GSTForm = ({ onSubmit }: GSTFormProps) => {
         <Input
           name="legalName"
           label="Legal name"
-          hint="Exactly as printed on the PAN card"
+          hint="Exactly as printed on the PAN card (text only)"
           value={String(form.values.legalName)}
           error={form.errors.legalName}
-          onChange={form.handleChange}
+          onChange={(e) => {
+            e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '')
+            form.handleChange(e)
+          }}
           required
         />
         <Input
           name="tradeName"
           label="Trade name"
-          hint="Optional"
+          hint="Optional (text only)"
           value={String(form.values.tradeName ?? '')}
           error={form.errors.tradeName}
-          onChange={form.handleChange}
+          onChange={(e) => {
+            e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '')
+            form.handleChange(e)
+          }}
         />
       </div>
 
@@ -104,7 +110,10 @@ export const GSTForm = ({ onSubmit }: GSTFormProps) => {
           placeholder="AABCT1234H"
           value={String(form.values.pan)}
           error={form.errors.pan}
-          onChange={form.handleChange}
+          onChange={(e) => {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+            form.handleChange(e)
+          }}
           required
         />
         <Input
@@ -115,7 +124,10 @@ export const GSTForm = ({ onSubmit }: GSTFormProps) => {
           placeholder="2500000"
           value={String(form.values.turnover)}
           error={form.errors.turnover}
-          onChange={form.handleChange}
+          onChange={(e) => {
+            e.target.value = e.target.value.replace(/\D/g, '')
+            form.handleChange(e)
+          }}
           required
         />
       </div>
@@ -136,9 +148,13 @@ export const GSTForm = ({ onSubmit }: GSTFormProps) => {
           inputMode="numeric"
           maxLength={10}
           prefix="+91"
+          placeholder="10-digit number"
           value={String(form.values.mobile)}
           error={form.errors.mobile}
-          onChange={form.handleChange}
+          onChange={(e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)
+            form.handleChange(e)
+          }}
           required
         />
       </div>

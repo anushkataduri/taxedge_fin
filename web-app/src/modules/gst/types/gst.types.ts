@@ -67,7 +67,6 @@ export interface GstListFilters {
   status?: ApplicationStatus
   search?: string
 }
-
 export type GstAmendmentFieldKey =
   | 'business_address'
   | 'business_name'
@@ -113,4 +112,3 @@ export interface GstCertificateRecord extends Timestamped {
   status: ApplicationStatus
   downloadUrl?: string
 }
-

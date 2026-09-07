@@ -38,13 +38,36 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
   const [frequency, setFrequency] = useState(initialData?.frequency || 'Monthly')
   const [selectedMonth, setSelectedMonth] = useState(initialData?.selectedMonth || '')
   const [returnType, setReturnType] = useState<'combo' | 'gstr1' | 'nil' | ''>(initialData?.returnType || '')
+  const [errors, setErrors] = useState<{ month?: string; returnType?: string }>({})
 
   const baseFee = returnType ? (RETURN_OPTIONS.find((opt) => opt.id === returnType)?.fee ?? 0) : 0
   const gstAmount = Math.round(baseFee * 0.18)
   const totalPayable = baseFee + gstAmount
 
+  const handleSelectMonth = (monthName: string) => {
+    setSelectedMonth(monthName)
+    setErrors((prev) => ({ ...prev, month: undefined }))
+  }
+
+  const handleSelectReturnType = (type: 'combo' | 'gstr1' | 'nil') => {
+    setReturnType(type)
+    setErrors((prev) => ({ ...prev, returnType: undefined }))
+  }
+
   const handleProceed = () => {
-    if (!returnType || !selectedMonth) return
+    const newErrors: { month?: string; returnType?: string } = {}
+    if (!selectedMonth) {
+      newErrors.month = 'Please select a filing month (e.g. August 2026) to continue'
+    }
+    if (!returnType) {
+      newErrors.returnType = 'Please select a return type to continue'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
     onContinue({
       gstin: '27AXTPD4419K1ZP',
       businessName: 'Shree Deshmukh Traders',
@@ -94,7 +117,7 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
           </section>
 
           {/* Section 2: Period Card */}
-          <section className="gst-period-card">
+          <section className={`gst-period-card ${errors.month ? 'gst-period-card--has-error' : ''}`}>
             <h2 className="gst-period-card__title">Period</h2>
             <p className="gst-period-card__subtitle">Filings are current through July 2026.</p>
 
@@ -137,7 +160,7 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
                   <div
                     key={card.id}
                     className={`gst-period-card-item ${isSelected ? 'gst-period-card-item--active' : ''} ${isLocked ? 'gst-period-card-item--locked' : ''}`}
-                    onClick={() => !isLocked && setSelectedMonth(card.fullName)}
+                    onClick={() => !isLocked && handleSelectMonth(card.fullName)}
                     role="button"
                     tabIndex={isLocked ? -1 : 0}
                   >
@@ -182,10 +205,15 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
                 )
               })}
             </div>
+            {errors.month && (
+              <p className="gst-period-error-msg" role="alert">
+                <span aria-hidden="true">⚠️</span> {errors.month}
+              </p>
+            )}
           </section>
 
           {/* Section 3: Return Type Card */}
-          <section className="gst-period-card">
+          <section className={`gst-period-card ${errors.returnType ? 'gst-period-card--has-error' : ''}`}>
             <h2 className="gst-period-card__title">Return type</h2>
             <div className="gst-period-return-list" role="radiogroup">
               {RETURN_OPTIONS.map((opt) => {
@@ -194,7 +222,7 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
                   <div
                     key={opt.id}
                     className={`gst-period-return-item ${isSelected ? 'gst-period-return-item--active' : ''}`}
-                    onClick={() => setReturnType(opt.id)}
+                    onClick={() => handleSelectReturnType(opt.id)}
                     role="radio"
                     aria-checked={isSelected}
                     tabIndex={0}
@@ -226,6 +254,11 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
                 )
               })}
             </div>
+            {errors.returnType && (
+              <p className="gst-period-error-msg" role="alert">
+                <span aria-hidden="true">⚠️</span> {errors.returnType}
+              </p>
+            )}
           </section>
 
           {/* Actions */}
@@ -235,7 +268,6 @@ export const GSTFilingPeriod = ({ initialData, onContinue, onCancel }: GSTFiling
               type="button"
               className="gst-period-btn-continue"
               onClick={handleProceed}
-              disabled={!returnType || !selectedMonth}
             >
               Continue →
             </button>
