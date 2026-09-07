@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../shared/theme";
-import { GstPersonalFormData } from "./GstPersonalStep";
 import { GstBusinessFormData } from "./GstBusinessStep";
 import { DocumentItem } from "./GstUnifiedDocumentStep";
 
 interface GstReviewStepProps {
-  personalData: GstPersonalFormData;
   businessData: GstBusinessFormData;
   documents: DocumentItem[];
   onEditStep: (stepIndex: number) => void;
@@ -16,7 +14,6 @@ interface GstReviewStepProps {
 }
 
 export const GstReviewStep: React.FC<GstReviewStepProps> = ({
-  personalData,
   businessData,
   documents,
   onEditStep,
@@ -30,47 +27,24 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* 1. Personal Details Card */}
+      {/* 1. Business Details Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Personal Details</Text>
+          <Text style={styles.cardTitle}>Business Details</Text>
           <TouchableOpacity onPress={() => onEditStep(0)} activeOpacity={0.7}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
-          <Text style={styles.label}>PAN Number</Text>
-          <Text style={styles.value}>{personalData.panNumber || "—"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Aadhaar Number</Text>
-          <Text style={styles.value}>{personalData.aadhaarNumber || "—"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Mobile Number</Text>
-          <Text style={styles.value}>{personalData.mobileNumber || "—"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Email Address</Text>
-          <Text style={styles.value}>{personalData.emailAddress || "—"}</Text>
-        </View>
-      </View>
-
-      {/* 2. Business Details Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Business Details</Text>
-          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
-            <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.row}>
-          <Text style={styles.label}>Business Name</Text>
+          <Text style={styles.label}>Business / Trade Name</Text>
           <Text style={styles.value}>
-            {businessData.registeredBusinessName || personalData.businessName || "—"}
+            {businessData.businessName || "—"}
           </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Business Type</Text>
+          <Text style={styles.value}>{businessData.businessType || "—"}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Nature of Business</Text>
@@ -78,17 +52,21 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Business Address</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.value, styles.valueMultiline]} numberOfLines={2}>
             {businessData.businessAddress || "—"}
           </Text>
         </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Address Proof</Text>
+          <Text style={styles.value}>{businessData.addressProofType || "—"}</Text>
+        </View>
       </View>
 
-      {/* 3. Bank Details Card */}
+      {/* 2. Bank Details Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Bank Details</Text>
-          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => onEditStep(0)} activeOpacity={0.7}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
@@ -105,11 +83,11 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
         </View>
       </View>
 
-      {/* 4. Documents Summary Card with Progress Bar */}
+      {/* 3. Documents Summary Card with Progress Bar */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Uploaded Documents</Text>
-          <TouchableOpacity onPress={() => onEditStep(2)} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
             <Text style={styles.docCountText}>
               {uploadedCount}/{totalCount} Uploaded
             </Text>
@@ -134,7 +112,7 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
         ) : null}
       </View>
 
-      {/* 5. Declaration Checkbox Card */}
+      {/* 4. Declaration Checkbox Card */}
       <TouchableOpacity
         style={styles.declarationCard}
         activeOpacity={0.8}
