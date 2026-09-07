@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 18,
     flexGrow: 1,
-    paddingBottom: 260,
+    paddingBottom: 24,
   },
   buttonWrapper: {
     marginTop: 22,

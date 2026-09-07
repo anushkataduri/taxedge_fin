@@ -9,10 +9,64 @@ import type {
   ServiceCategoryId,
 } from "../types/domain";
 
+export interface GstRegistrationDraft {
+  id: string;
+  stepIndex: number;
+  personalData: Record<string, string>;
+  businessData: Record<string, string>;
+  documents: Array<{
+    id: string;
+    name: string;
+    subtitle: string;
+    required: boolean;
+    iconName: string;
+    iconBg: string;
+    iconColor: string;
+    category: string;
+    fileUri?: string;
+    fileName?: string;
+    fileSize?: string;
+    uploadedAt?: string;
+  }>;
+  updatedAt: string;
+}
+
+export interface GstFilingDraft {
+  id: string;
+  stepIndex: number;
+  periodData: {
+    periodType: string;
+    filingMonth: string;
+    gstin: string;
+    filingType: string;
+  };
+  documents: Array<{
+    id: string;
+    name: string;
+    subtitle: string;
+    required: boolean;
+    iconName: string;
+    iconBg: string;
+    iconColor: string;
+    category: string;
+    fileUri?: string;
+    fileName?: string;
+    fileSize?: string;
+    uploadedAt?: string;
+  }>;
+  updatedAt: string;
+}
+
 export interface ApplicationState {
   applications: Application[];
   selectedApplicationId: string | null;
+  gstDraft: GstRegistrationDraft | null;
+  gstFilingDraft: GstFilingDraft | null;
   setSelectedApplicationId: (id: string | null) => void;
+  saveGstDraft: (draft: GstRegistrationDraft) => void;
+  clearGstDraft: () => void;
+  saveGstFilingDraft: (draft: GstFilingDraft) => void;
+  clearGstFilingDraft: () => void;
   /** Creates an application and returns its generated id. */
   createApplication: (
     serviceId: string,
@@ -33,7 +87,13 @@ const timeStamp = (): string =>
 export const useApplicationStore = create<ApplicationState>((set) => ({
   applications: mockApplications,
   selectedApplicationId: null,
+  gstDraft: null,
+  gstFilingDraft: null,
   setSelectedApplicationId: (id) => set({ selectedApplicationId: id }),
+  saveGstDraft: (draft) => set({ gstDraft: draft }),
+  clearGstDraft: () => set({ gstDraft: null }),
+  saveGstFilingDraft: (draft) => set({ gstFilingDraft: draft }),
+  clearGstFilingDraft: () => set({ gstFilingDraft: null }),
   createApplication: (
     serviceId,
     serviceName,

@@ -41,15 +41,27 @@ export interface GstBusinessFormData {
 interface GstBusinessStepProps {
   data: GstBusinessFormData;
   onChange: (fields: Partial<GstBusinessFormData>) => void;
+  onBlurField?: (field: keyof GstBusinessFormData) => void;
   errors?: Record<string, string>;
 }
 
 export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
   data,
   onChange,
+  onBlurField,
   errors = {},
 }) => {
   const [showNatureModal, setShowNatureModal] = useState(false);
+
+  const handleBankAccChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    onChange({ bankAccountNumber: cleaned });
+  };
+
+  const handleIfscChange = (text: string) => {
+    const cleaned = text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    onChange({ ifscCode: cleaned });
+  };
 
   return (
     <View style={styles.container}>
@@ -62,6 +74,7 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
           placeholderTextColor="#94A3B8"
           value={data.registeredBusinessName}
           onChangeText={(t) => onChange({ registeredBusinessName: t })}
+          onBlur={() => onBlurField?.("registeredBusinessName")}
         />
         {errors.registeredBusinessName ? (
           <Text style={styles.errorText}>{errors.registeredBusinessName}</Text>
@@ -95,6 +108,7 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
           placeholderTextColor="#94A3B8"
           value={data.businessAddress}
           onChangeText={(t) => onChange({ businessAddress: t })}
+          onBlur={() => onBlurField?.("businessAddress")}
         />
         {errors.businessAddress ? (
           <Text style={styles.errorText}>{errors.businessAddress}</Text>
@@ -106,10 +120,11 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
         <Text style={styles.label}>Bank Account Number *</Text>
         <TextInput
           style={[styles.input, errors.bankAccountNumber && styles.inputError]}
-          placeholder="Enter account number"
+          placeholder="Enter 9 to 18 digit account number"
           placeholderTextColor="#94A3B8"
           value={data.bankAccountNumber}
-          onChangeText={(t) => onChange({ bankAccountNumber: t })}
+          onChangeText={handleBankAccChange}
+          onBlur={() => onBlurField?.("bankAccountNumber")}
           keyboardType="numeric"
           maxLength={18}
         />
@@ -123,10 +138,11 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
         <Text style={styles.label}>IFSC Code *</Text>
         <TextInput
           style={[styles.input, errors.ifscCode && styles.inputError]}
-          placeholder="Enter IFSC code"
+          placeholder="e.g. HDFC0001234"
           placeholderTextColor="#94A3B8"
           value={data.ifscCode}
-          onChangeText={(t) => onChange({ ifscCode: t.toUpperCase() })}
+          onChangeText={handleIfscChange}
+          onBlur={() => onBlurField?.("ifscCode")}
           autoCapitalize="characters"
           maxLength={11}
         />

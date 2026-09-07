@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -16,33 +16,30 @@ import { GstServiceBanner } from "../components/common/GstServiceBanner";
 import { GstSelectModal } from "../components/common/GstSelectModal";
 import { GstFileUploadField } from "../components/common/GstFileUploadField";
 import { GstSuccessAnimationScreen } from "../components/common/GstSuccessAnimationScreen";
+import { UniversalDraftModal } from "../../../shared/components/UniversalDraftModal";
+import { useUniversalDraftGuard } from "../../../shared/hooks/useUniversalDraftGuard";
 import { GstValidators } from "../utils/gstValidators";
 import { styles } from "./GstAmendmentScreen.styles";
+import { useApplicationStore } from "../../../store/applicationStore";
+import { useNotificationStore } from "../../../store/notificationStore";
 
 const AMENDMENT_FIELDS = [
-  "Business Name",
-  "Address",
-  "Business Type",
-  "Bank Details",
-  "Authorized Signatory",
+  "Legal Business Name / Trade Name",
+  "Principal Place of Business Address",
+  "Business Constitution / Type",
+  "Bank Account & IFSC Details",
+  "Authorized Signatory / Partners / Directors",
   "Additional Place of Business",
 ];
-
-const CURRENT_REGISTERED_DATA: Record<string, string> = {
-  "Business Name": "Pavan Enterprises",
-  "Address": "221B, Baker Street, London, UK",
-  "Business Type": "Proprietorship",
-  "Bank Details": "HDFC Bank • A/C Ending in 8921",
-  "Authorized Signatory": "Pavan Kalyan (Proprietor)",
-  "Additional Place of Business": "None Registered",
-};
 
 export default function GstAmendmentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const gstin = "29PAVAN1234K1Z5";
+  const [gstin, setGstin] = useState("");
   const [selectedField, setSelectedField] = useState("");
+  const [currentValue, setCurrentValue] = useState("");
   const [newValue, setNewValue] = useState("");
   const [supportingDoc, setSupportingDoc] = useState<{ uri: string; name: string; size: string } | null>(null);
 
@@ -51,7 +48,29 @@ export default function GstAmendmentScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const oldValue = selectedField ? CURRENT_REGISTERED_DATA[selectedField] || "None" : "";
+  // Universal Draft Guard
+  const {
+    showDraftModal,
+    markSubmitted,
+    handleSaveAndExit,
+    handleDiscardAndExit,
+    handleCancel,
+  } = useUniversalDraftGuard({
+    isDirty: () =>
+      Boolean(
+        gstin ||
+        selectedField ||
+        newValue ||
+        supportingDoc
+      ),
+    onSaveDraft: () => {
+      // Saved
+    },
+    onDiscardDraft: () => {
+      // Discarded
+    },
+    isSubmitted: () => isSubmitted,
+  });
 
   const clearError = (key: string) => {
     setErrors((prev) => {
@@ -61,21 +80,26 @@ export default function GstAmendmentScreen() {
     });
   };
 
+  const handleGstinChange = (text: string) => {
+    const cleaned = text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    setGstin(cleaned);
+    clearError("gstin");
+  };
+
   const validateForm = (): boolean => {
     const errs: Record<string, string> = {};
 
+    if (!GstValidators.isValidGstin(gstin)) {
+      errs.gstin = "Enter a valid 15-character GSTIN (e.g. 29AAAAA0000A1Z5)";
+    }
     if (!selectedField) {
       errs.selectedField = "Please select the field being changed.";
     }
-
     if (!GstValidators.isNotEmpty(newValue, 2)) {
-      errs.newValue = "New value is required.";
-    } else if (oldValue && newValue.trim().toLowerCase() === oldValue.trim().toLowerCase()) {
-      errs.newValue = "New value must be different from the current value.";
+      errs.newValue = "New value / proposed amendment is required.";
     }
-
     if (!supportingDoc) {
-      errs.supportingDoc = "Please upload a supporting document as proof of change.";
+      errs.supportingDoc = "Please upload proof of amendment (e.g. rent deed, board resolution, bank proof).";
     }
 
     setErrors(errs);
@@ -91,7 +115,28 @@ export default function GstAmendmentScreen() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
+      markSubmitted();
       setIsSubmitted(true);
+
+      const appId = useApplicationStore.getState().createApplication(
+        "gst-amendment",
+        `GST Amendment (${selectedField})`,
+        "GST",
+        {
+          gstin,
+          selectedField,
+          currentValue,
+          newValue,
+        },
+        supportingDoc ? [supportingDoc.name] : ["Supporting Amendment Proof"],
+        1499
+      );
+
+      useNotificationStore.getState().addNotification(
+        "Amendment Request Submitted",
+        `Your GST Amendment request for ${gstin} (${selectedField}) has been submitted. App ID: ${appId}.`,
+        "gst"
+      );
     }, 800);
   };
 
@@ -99,7 +144,7 @@ export default function GstAmendmentScreen() {
     return (
       <GstSuccessAnimationScreen
         title="Amendment Submitted!"
-        subtitle={`Your amendment request for ${selectedField || "Address"} has been submitted for ${gstin}.\n\nOur CA team will process the change with the GST portal.`}
+        subtitle={`Your amendment request for ${selectedField} on GSTIN ${gstin} has been submitted.\n\nOur CA team will file the REG-14 amendment on the GST portal.`}
       />
     );
   }
@@ -109,15 +154,16 @@ export default function GstAmendmentScreen() {
       {/* Header */}
       <View style={[styles.headerBar, { paddingTop: Math.max(insets.top, 12) + 6 }]}>
         <TouchableOpacity activeOpacity={0.7} onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={BrandColors.TEXT_PRIMARY} />
+          <Ionicons name="chevron-back" size={20} color={BrandColors.TEXT_PRIMARY} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>GST Amendment</Text>
         <View style={styles.placeholderBox} />
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         bounces={true}
@@ -126,17 +172,22 @@ export default function GstAmendmentScreen() {
         {/* Top Info Banner */}
         <GstServiceBanner
           iconName="pencil"
-          text="Update a detail on your existing GST registration"
+          text="Update core or non-core fields on your existing GST registration (Form REG-14)"
         />
 
-        {/* GSTIN (Read-Only) */}
+        {/* GSTIN (Editable & Clean) */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>GSTIN</Text>
+          <Text style={styles.label}>GSTIN (15-Character) <Text style={styles.star}>*</Text></Text>
           <TextInput
-            style={[styles.input, styles.readOnlyInput]}
+            style={[styles.input, errors.gstin && styles.inputError]}
+            placeholder="e.g. 29AAAAA0000A1Z5"
+            placeholderTextColor="#94A3B8"
             value={gstin}
-            editable={false}
+            onChangeText={handleGstinChange}
+            autoCapitalize="characters"
+            maxLength={15}
           />
+          {errors.gstin ? <Text style={styles.errorText}>{errors.gstin}</Text> : null}
         </View>
 
         {/* Field Being Changed Dropdown */}
@@ -148,31 +199,31 @@ export default function GstAmendmentScreen() {
             onPress={() => setShowFieldModal(true)}
           >
             <Text style={[styles.selectText, !selectedField && styles.placeholderText]}>
-              {selectedField || "Select Field Being Changed"}
+              {selectedField || "Select Field to Amend"}
             </Text>
             <Ionicons name="chevron-down" size={18} color="#64748B" />
           </TouchableOpacity>
           {errors.selectedField ? <Text style={styles.errorText}>{errors.selectedField}</Text> : null}
         </View>
 
-        {/* Old Value Display (Auto-filled) */}
+        {/* Current Value (Optional) */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Old Value</Text>
+          <Text style={styles.label}>Current Existing Value (Optional)</Text>
           <TextInput
-            style={[styles.input, styles.readOnlyInput]}
-            value={oldValue || (selectedField ? "None" : "")}
-            placeholder="Select a field to view current value"
+            style={styles.input}
+            value={currentValue}
+            onChangeText={setCurrentValue}
+            placeholder="Enter current value registered on portal"
             placeholderTextColor="#94A3B8"
-            editable={false}
           />
         </View>
 
         {/* New Value Input */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>New Value <Text style={styles.star}>*</Text></Text>
+          <Text style={styles.label}>New / Proposed Value <Text style={styles.star}>*</Text></Text>
           <TextInput
             style={[styles.textArea, errors.newValue && styles.inputError]}
-            placeholder="Enter new value"
+            placeholder="Enter updated new value in detail"
             placeholderTextColor="#94A3B8"
             value={newValue}
             onChangeText={(t) => {
@@ -191,7 +242,7 @@ export default function GstAmendmentScreen() {
 
         {/* Supporting Document Upload */}
         <GstFileUploadField
-          label="Supporting Document"
+          label="Supporting Proof Document"
           required
           fileUri={supportingDoc?.uri}
           fileName={supportingDoc?.name}
@@ -202,7 +253,7 @@ export default function GstAmendmentScreen() {
           }}
           onFileRemoved={() => setSupportingDoc(null)}
           error={errors.supportingDoc}
-          placeholder="Upload Supporting Document"
+          placeholder="Upload Supporting Amendment Proof"
         />
 
         {/* Submit CTA */}
@@ -213,7 +264,7 @@ export default function GstAmendmentScreen() {
           disabled={isSubmitting}
         >
           <Text style={styles.actionOrangeBtnText}>
-            {isSubmitting ? "Processing..." : "Submit Amendment"}
+            {isSubmitting ? "Processing..." : "Submit Amendment Request"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -221,7 +272,7 @@ export default function GstAmendmentScreen() {
       {/* Field Selector Modal */}
       <GstSelectModal
         visible={showFieldModal}
-        title="Select Field Being Changed"
+        title="Select Field to Amend"
         options={AMENDMENT_FIELDS}
         selectedValue={selectedField}
         onSelect={(v) => {
@@ -230,8 +281,19 @@ export default function GstAmendmentScreen() {
         }}
         onClose={() => setShowFieldModal(false)}
       />
+
+      {/* Universal Save As Draft Confirmation Modal */}
+      <UniversalDraftModal
+        visible={showDraftModal}
+        title="Save Amendment Draft?"
+        message="You have unsaved changes in your GST amendment request. Save your progress so you can resume anytime without re-entering details."
+        saveButtonText="Save as Draft & Exit"
+        discardButtonText="Discard & Exit"
+        cancelButtonText="Keep Editing"
+        onSaveAndExit={handleSaveAndExit}
+        onDiscardAndExit={handleDiscardAndExit}
+        onCancel={handleCancel}
+      />
     </View>
   );
 }
-
-
