@@ -125,4 +125,54 @@ export const GstValidators = {
     if (!GstValidators.isNotEmpty(data.customerId, 4)) errs.customerId = "Customer / User ID is required";
     return errs;
   },
+
+  /**
+   * Functional field-level validator for GST Business Step
+   */
+  validateBusinessField: (field: string, value: string): string => {
+    switch (field) {
+      case "businessName":
+      case "registeredBusinessName":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Business / Trade Name is required";
+        return "";
+      case "businessType":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Please select a business type";
+        return "";
+      case "natureOfBusiness":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Please select nature of business";
+        return "";
+      case "businessAddress":
+        if (!GstValidators.isNotEmpty(value, 5)) return "Full business address with pincode is required";
+        return "";
+      case "bankAccountNumber":
+        if (!value.trim()) return "Bank account number is required";
+        if (!GstValidators.isValidBankAccount(value)) return "Enter a valid bank account number (9 to 18 digits)";
+        return "";
+      case "ifscCode":
+        if (!value.trim()) return "IFSC code is required";
+        if (!GstValidators.isValidIfsc(value)) return "Enter a valid 11-digit IFSC code (e.g. HDFC0001234)";
+        return "";
+      default:
+        return "";
+    }
+  },
+
+  /**
+   * Functional whole-form validator for Business Details using reduce (no loops)
+   */
+  validateBusinessForm: (data: Record<string, string>): Record<string, string> => {
+    const fields = [
+      "businessName",
+      "businessType",
+      "natureOfBusiness",
+      "businessAddress",
+      "bankAccountNumber",
+      "ifscCode",
+    ];
+    return fields.reduce<Record<string, string>>((acc, key) => {
+      const value = data[key] || (key === "businessName" ? data["registeredBusinessName"] : "") || "";
+      const error = GstValidators.validateBusinessField(key, value);
+      return error ? { ...acc, [key]: error } : acc;
+    }, {});
+  },
 };

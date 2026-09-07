@@ -1,19 +1,48 @@
-export type UserRole =
-  | 'CUSTOMER'
-  | 'AGENT'
-  | 'MANAGER'
-  | 'ADMIN'
-  | 'SUPER_ADMIN'
+import type { AuthSession, AuthUser } from '@core/auth'
 
-export interface AuthUser {
-  id: string
-  name: string
+export interface LoginPayload {
+  mobile: string
+  password: string
+}
+
+export interface RegisterPayload {
+  fullName: string
   email: string
-  role: UserRole
+  mobile: string
+  password: string
 }
 
-export interface AuthState {
-  user: AuthUser | null
-  accessToken: string | null
-  isAuthenticated: boolean
+export interface SendOtpPayload {
+  mobile: string
 }
+
+export interface VerifyOtpPayload {
+  mobile: string
+  otp: string
+}
+
+export interface PasscodePayload {
+  passcode: string
+}
+
+export interface VerifyPasscodePayload {
+  mobile: string
+  passcode: string
+}
+
+export interface SaveRegistrationStep1Payload {
+  mobile: string
+  passcode: string
+  user: AuthUser
+}
+
+export interface CreateProfilePayload {
+  pan: string
+  addressLine: string
+  city: string
+  state: string
+  pincode: string
+}
+
+export type LoginResponse = AuthSession
+export type RegisterResponse = { user: AuthUser; otpSent: boolean }

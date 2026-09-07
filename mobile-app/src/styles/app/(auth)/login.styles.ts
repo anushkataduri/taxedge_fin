@@ -133,4 +133,71 @@ export const styles = StyleSheet.create({
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.semiBold,
   },
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  changeNumberBtn: {
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  changeNumberText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.bold,
+    color: BrandColors.PRIMARY_BLUE,
+  },
+  disabledField: {
+    opacity: 0.85,
+  },
+  otpSection: {
+    width: "100%",
+    marginTop: Spacing.md,
+  },
+  otpTouchable: {
+    width: "100%",
+  },
+  otpGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: Spacing.md,
+    width: "100%",
+  },
+  otpBox: {
+    width: 46,
+    height: 54,
+    borderRadius: BorderRadius.sm + 2,
+    borderWidth: 1.5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  otpBoxText: {
+    fontSize: Typography.fontSize.lg + 4,
+    fontWeight: Typography.fontWeight.bold,
+  },
+  hiddenInput: {
+    position: "absolute",
+    opacity: 0,
+    width: 1,
+    height: 1,
+  },
+  verifyBtn: {
+    marginTop: 8,
+    height: 50,
+  },
+  resendContainer: {
+    marginTop: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resendText: {
+    fontSize: Typography.fontSize.sm + 0.5,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  resendLink: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.bold,
+    color: "#F97316",
+  },
 });

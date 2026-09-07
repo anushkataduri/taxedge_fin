@@ -1,124 +1,118 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../shared/theme";
-import { GstPersonalFormData } from "./GstPersonalStep";
 import { GstBusinessFormData } from "./GstBusinessStep";
+import { DocumentItem } from "./GstUnifiedDocumentStep";
 
 interface GstReviewStepProps {
-  personalData: GstPersonalFormData;
   businessData: GstBusinessFormData;
+  documents: DocumentItem[];
   onEditStep: (stepIndex: number) => void;
   declared: boolean;
   onToggleDeclaration: () => void;
 }
 
 export const GstReviewStep: React.FC<GstReviewStepProps> = ({
-  personalData,
   businessData,
+  documents,
   onEditStep,
   declared,
   onToggleDeclaration,
 }) => {
+  const uploadedDocs = documents.filter((d) => Boolean(d.fileUri));
+  const uploadedCount = uploadedDocs.length;
+  const totalCount = documents.length;
+  const progressPercent = totalCount > 0 ? (uploadedCount / totalCount) * 100 : 0;
+
   return (
     <View style={styles.container}>
-      {/* 1. Personal Details Card */}
+      {/* 1. Business Details Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Personal Details</Text>
+          <Text style={styles.cardTitle}>Business Details</Text>
           <TouchableOpacity onPress={() => onEditStep(0)} activeOpacity={0.7}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
-          <Text style={styles.label}>PAN Number</Text>
-          <Text style={styles.value}>{personalData.panNumber || "PAVAN1234K"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Aadhaar</Text>
-          <Text style={styles.value}>{personalData.aadhaarNumber || "XXXX XXXX 1234"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Mobile</Text>
-          <Text style={styles.value}>{personalData.mobileNumber || "+91 98765 43210"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Email</Text>
-          <Text style={styles.value}>{personalData.emailAddress || "pavan@business.com"}</Text>
-        </View>
-      </View>
-
-      {/* 2. Business Details Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Business Details</Text>
-          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
-            <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.row}>
-          <Text style={styles.label}>Business Name</Text>
+          <Text style={styles.label}>Business / Trade Name</Text>
           <Text style={styles.value}>
-            {businessData.registeredBusinessName || personalData.businessName || "Pavan Enterprises"}
+            {businessData.businessName || "—"}
           </Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Nature</Text>
-          <Text style={styles.value}>{businessData.natureOfBusiness || "Trader"}</Text>
+          <Text style={styles.label}>Business Type</Text>
+          <Text style={styles.value}>{businessData.businessType || "—"}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Address</Text>
-          <Text style={styles.value}>
-            {businessData.businessAddress || "MG Road, Bengaluru, 560001"}
+          <Text style={styles.label}>Nature of Business</Text>
+          <Text style={styles.value}>{businessData.natureOfBusiness || "—"}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Business Address</Text>
+          <Text style={[styles.value, styles.valueMultiline]} numberOfLines={2}>
+            {businessData.businessAddress || "—"}
           </Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Bank</Text>
-          <Text style={styles.value}>HDFC — XXXX1234</Text>
+          <Text style={styles.label}>Address Proof</Text>
+          <Text style={styles.value}>{businessData.addressProofType || "—"}</Text>
         </View>
       </View>
 
-      {/* 3. Bank Details Card */}
+      {/* 2. Bank Details Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Bank Details</Text>
-          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => onEditStep(0)} activeOpacity={0.7}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
-          <Text style={styles.label}>Account No.</Text>
+          <Text style={styles.label}>Account Number</Text>
           <Text style={styles.value}>
-            {businessData.bankAccountNumber || "XXXX XXXX 1234"}
+            {businessData.bankAccountNumber || "—"}
           </Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>IFSC</Text>
-          <Text style={styles.value}>{businessData.ifscCode || "HDFC0001234"}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Branch</Text>
-          <Text style={styles.value}>MG Road, Bengaluru</Text>
+          <Text style={styles.label}>IFSC Code</Text>
+          <Text style={styles.value}>{businessData.ifscCode || "—"}</Text>
         </View>
       </View>
 
-      {/* 4. Documents Summary Card with Progress Bar */}
+      {/* 3. Documents Summary Card with Progress Bar */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Documents</Text>
-          <TouchableOpacity onPress={() => onEditStep(2)} activeOpacity={0.7}>
-            <Text style={styles.docCountText}>4/9 Uploaded</Text>
+          <Text style={styles.cardTitle}>Uploaded Documents</Text>
+          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
+            <Text style={styles.docCountText}>
+              {uploadedCount}/{totalCount} Uploaded
+            </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.docProgressBar}>
-          <View style={styles.docProgressFill} />
+          <View style={[styles.docProgressFill, { width: `${progressPercent}%` }]} />
         </View>
+
+        {uploadedDocs.length > 0 ? (
+          <View style={styles.uploadedDocList}>
+            {uploadedDocs.map((doc) => (
+              <View key={doc.id} style={styles.uploadedDocItem}>
+                <Ionicons name="checkmark-circle" size={16} color="#059669" />
+                <Text style={styles.uploadedDocName} numberOfLines={1}>
+                  {doc.name}
+                </Text>
+                <Text style={styles.uploadedDocSize}>{doc.fileSize}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </View>
 
-      {/* 5. Declaration Checkbox Card */}
+      {/* 4. Declaration Checkbox Card */}
       <TouchableOpacity
         style={styles.declarationCard}
         activeOpacity={0.8}
@@ -192,6 +186,11 @@ const styles = StyleSheet.create({
     color: BrandColors.TEXT_PRIMARY,
     fontFamily: Platform.select({ ios: "System", android: "sans-serif-medium" }),
   },
+  valueMultiline: {
+    flex: 1,
+    textAlign: "right",
+    marginLeft: 16,
+  },
   docProgressBar: {
     height: 5,
     backgroundColor: "#F1F5F9",
@@ -200,10 +199,31 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   docProgressFill: {
-    width: "45%",
     height: "100%",
     backgroundColor: BrandColors.PRIMARY_ORANGE,
     borderRadius: 3,
+  },
+  uploadedDocList: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+    gap: 8,
+  },
+  uploadedDocItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  uploadedDocName: {
+    flex: 1,
+    fontSize: 13,
+    color: BrandColors.TEXT_PRIMARY,
+    fontWeight: "500",
+  },
+  uploadedDocSize: {
+    fontSize: 11.5,
+    color: "#64748B",
   },
   declarationCard: {
     flexDirection: "row",
