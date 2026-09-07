@@ -76,3 +76,16 @@
   .gst-pay-actions-box { flex-direction: column; }
   .gst-pay-btn-cancel, .gst-pay-btn-submit { width: 100%; }
 }
+
+.gst-pay-inp--error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444 !important;
+  background-color: #fffbfb !important;
+}
+
+.gst-pay-field-err {
+  margin: 0.35rem 0 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b91c1c;
+}

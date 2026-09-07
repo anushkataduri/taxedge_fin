@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ThemeProvider } from "./design-system/theme";
-import { ErrorBoundary } from "./core/error-handling";
+import { ThemeProvider } from "../design-system/theme";
+import { ErrorBoundary } from "../core/error-handling";
 import { AppBootstrap } from "./bootstrap/AppBootstrap";
 import { RootNavigator } from "./navigation/RootNavigator";
 

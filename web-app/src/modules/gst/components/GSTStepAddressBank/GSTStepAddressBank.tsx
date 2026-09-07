@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import './GSTStepAddressBank.css'
 
 export interface AddressBankFormData {
@@ -55,8 +55,93 @@ export const GSTStepAddressBank = ({
   onNext,
   onBack,
 }: GSTStepAddressBankProps) => {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const clearErr = (k: string) =>
+    setErrors((prev) => {
+      if (!prev[k]) return prev
+      const { [k]: _, ...rest } = prev
+      return rest
+    })
+
+  const handleCityChange = (val: string) => {
+    // Only text (letters and spaces)
+    const cleaned = val.replace(/[^a-zA-Z\s]/g, '')
+    onChange('city', cleaned)
+    clearErr('city')
+  }
+
+  const handlePinCodeChange = (val: string) => {
+    // Only numbers, max 6 digits
+    const cleaned = val.replace(/\D/g, '').slice(0, 6)
+    onChange('pinCode', cleaned)
+    clearErr('pinCode')
+  }
+
+  const handleAccountHolderChange = (val: string) => {
+    // Only text (letters and spaces)
+    const cleaned = val.replace(/[^a-zA-Z\s]/g, '')
+    onChange('accountHolderName', cleaned)
+    clearErr('accountHolderName')
+  }
+
+  const handleAccountNumberChange = (val: string) => {
+    // Only numbers
+    const cleaned = val.replace(/\D/g, '').slice(0, 18)
+    onChange('accountNumber', cleaned)
+    clearErr('accountNumber')
+  }
+
+  const handleIfscChange = (val: string) => {
+    // Letters auto-caps, alphanumeric, max 11
+    const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)
+    onChange('ifscCode', cleaned)
+    clearErr('ifscCode')
+  }
+
+  const validate = () => {
+    const errs: Record<string, string> = {}
+
+    if (!data.address.trim()) {
+      errs.address = 'Address is required'
+    }
+
+    if (!data.city.trim()) {
+      errs.city = 'City is required (letters only)'
+    }
+
+    const pinClean = data.pinCode.replace(/\D/g, '')
+    if (!pinClean) {
+      errs.pinCode = 'PIN code is required'
+    } else if (pinClean.length !== 6) {
+      errs.pinCode = `PIN code must be exactly 6 digits (currently ${pinClean.length}/6)`
+    }
+
+    if (!data.accountHolderName.trim()) {
+      errs.accountHolderName = 'Account holder name is required (letters only)'
+    }
+
+    const accClean = data.accountNumber.replace(/\D/g, '')
+    if (!accClean) {
+      errs.accountNumber = 'Account number is required'
+    } else if (accClean.length < 9) {
+      errs.accountNumber = 'Account number must be at least 9 digits'
+    }
+
+    const ifscClean = data.ifscCode.trim().toUpperCase()
+    if (!ifscClean) {
+      errs.ifscCode = 'IFSC code is required'
+    } else if (ifscClean.length !== 11) {
+      errs.ifscCode = `IFSC code must be 11 characters (currently ${ifscClean.length}/11)`
+    }
+
+    setErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    if (!validate()) return
     onNext()
   }
 
@@ -75,7 +160,7 @@ export const GSTStepAddressBank = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="gst-step-address-bank">
+    <form onSubmit={handleSubmit} noValidate className="gst-step-address-bank">
       {/* 1. Principal place of business */}
       <section className="gst-step-section-card">
         <div className="gst-step-section-card__header">
@@ -92,45 +177,49 @@ export const GSTStepAddressBank = ({
             </label>
             <textarea
               id="address"
-              className="gst-form-textarea"
+              className={`gst-form-textarea ${errors.address ? 'gst-form-input--error' : ''}`}
               rows={3}
               value={data.address}
-              onChange={(e) => onChange('address', e.target.value)}
+              onChange={(e) => {
+                onChange('address', e.target.value)
+                clearErr('address')
+              }}
               placeholder="Shop 14, Laxmi Complex, FC Road, Shivajinagar"
-              required
             />
+            {errors.address && <p className="gst-form-error-text">⚠️ {errors.address}</p>}
           </div>
 
           <div className="gst-form-row">
             <div className="gst-form-group">
               <label className="gst-form-label" htmlFor="city">
-                City <span className="gst-form-required">*</span>
+                City (text only) <span className="gst-form-required">*</span>
               </label>
               <input
                 id="city"
                 type="text"
-                className="gst-form-input"
+                className={`gst-form-input ${errors.city ? 'gst-form-input--error' : ''}`}
                 value={data.city}
-                onChange={(e) => onChange('city', e.target.value)}
+                onChange={(e) => handleCityChange(e.target.value)}
                 placeholder="Pune"
-                required
               />
+              {errors.city && <p className="gst-form-error-text">⚠️ {errors.city}</p>}
             </div>
 
             <div className="gst-form-group">
               <label className="gst-form-label" htmlFor="pinCode">
-                PIN code <span className="gst-form-required">*</span>
+                PIN code (numbers only) <span className="gst-form-required">*</span>
               </label>
               <input
                 id="pinCode"
                 type="text"
-                className="gst-form-input"
+                inputMode="numeric"
+                className={`gst-form-input ${errors.pinCode ? 'gst-form-input--error' : ''}`}
                 value={data.pinCode}
-                onChange={(e) => onChange('pinCode', e.target.value)}
+                onChange={(e) => handlePinCodeChange(e.target.value)}
                 placeholder="411004"
                 maxLength={6}
-                required
               />
+              {errors.pinCode && <p className="gst-form-error-text">⚠️ {errors.pinCode}</p>}
             </div>
           </div>
 
@@ -192,32 +281,33 @@ export const GSTStepAddressBank = ({
           <div className="gst-form-row">
             <div className="gst-form-group">
               <label className="gst-form-label" htmlFor="accountHolderName">
-                Account holder name <span className="gst-form-required">*</span>
+                Account holder name (text only) <span className="gst-form-required">*</span>
               </label>
               <input
                 id="accountHolderName"
                 type="text"
-                className="gst-form-input"
+                className={`gst-form-input ${errors.accountHolderName ? 'gst-form-input--error' : ''}`}
                 value={data.accountHolderName}
-                onChange={(e) => onChange('accountHolderName', e.target.value)}
+                onChange={(e) => handleAccountHolderChange(e.target.value)}
                 placeholder="Shree Deshmukh Traders"
-                required
               />
+              {errors.accountHolderName && <p className="gst-form-error-text">⚠️ {errors.accountHolderName}</p>}
             </div>
 
             <div className="gst-form-group">
               <label className="gst-form-label" htmlFor="accountNumber">
-                Account number <span className="gst-form-required">*</span>
+                Account number (numbers only) <span className="gst-form-required">*</span>
               </label>
               <input
                 id="accountNumber"
                 type="text"
-                className="gst-form-input"
+                inputMode="numeric"
+                className={`gst-form-input ${errors.accountNumber ? 'gst-form-input--error' : ''}`}
                 value={data.accountNumber}
-                onChange={(e) => onChange('accountNumber', e.target.value)}
+                onChange={(e) => handleAccountNumberChange(e.target.value)}
                 placeholder="As on cheque or statement"
-                required
               />
+              {errors.accountNumber && <p className="gst-form-error-text">⚠️ {errors.accountNumber}</p>}
             </div>
           </div>
 
@@ -229,13 +319,13 @@ export const GSTStepAddressBank = ({
               <input
                 id="ifscCode"
                 type="text"
-                className="gst-form-input"
+                className={`gst-form-input ${errors.ifscCode ? 'gst-form-input--error' : ''}`}
                 value={data.ifscCode}
-                onChange={(e) => onChange('ifscCode', e.target.value.toUpperCase())}
+                onChange={(e) => handleIfscChange(e.target.value)}
                 placeholder="HDFC0000412"
                 maxLength={11}
-                required
               />
+              {errors.ifscCode && <p className="gst-form-error-text">⚠️ {errors.ifscCode}</p>}
             </div>
 
             <div className="gst-form-group">

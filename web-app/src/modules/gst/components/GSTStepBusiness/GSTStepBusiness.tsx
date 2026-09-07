@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import './GSTStepBusiness.css'
 
 export interface BusinessFormData {
@@ -28,8 +28,102 @@ export const GSTStepBusiness = ({
   onNext,
   onCancel,
 }: GSTStepBusinessProps) => {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const clearErr = (k: string) =>
+    setErrors((prev) => {
+      if (!prev[k]) return prev
+      const { [k]: _, ...rest } = prev
+      return rest
+    })
+
+  const handleLegalNameChange = (val: string) => {
+    // Only text (letters and spaces), no numbers
+    const cleaned = val.replace(/[^a-zA-Z\s]/g, '')
+    onChange('legalName', cleaned)
+    clearErr('legalName')
+  }
+
+  const handleTradeNameChange = (val: string) => {
+    // Only text (letters and spaces), no numbers
+    const cleaned = val.replace(/[^a-zA-Z\s]/g, '')
+    onChange('tradeName', cleaned)
+    clearErr('tradeName')
+  }
+
+  const handlePanChange = (val: string) => {
+    // Letters automatically uppercase, max 10 alphanumeric
+    const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+    onChange('pan', cleaned)
+    clearErr('pan')
+  }
+
+  const handleAadhaarChange = (val: string) => {
+    // Numbers only, max 12 digits
+    const cleaned = val.replace(/\D/g, '').slice(0, 12)
+    onChange('aadhaar', cleaned)
+    clearErr('aadhaar')
+  }
+
+  const handleMobileChange = (val: string) => {
+    // Numbers only, max 10 digits
+    const cleaned = val.replace(/\D/g, '').slice(0, 10)
+    onChange('mobile', cleaned)
+    clearErr('mobile')
+  }
+
+  const handleEmailChange = (val: string) => {
+    onChange('email', val)
+    clearErr('email')
+  }
+
+  const validate = () => {
+    const errs: Record<string, string> = {}
+
+    if (!data.legalName.trim()) {
+      errs.legalName = 'Legal name is required (letters only)'
+    } else if (data.legalName.trim().length < 3) {
+      errs.legalName = 'Legal name must be at least 3 characters'
+    }
+
+    const panClean = data.pan.trim().toUpperCase()
+    if (!panClean) {
+      errs.pan = 'PAN is required'
+    } else if (panClean.length !== 10) {
+      errs.pan = `PAN must be exactly 10 characters (currently ${panClean.length}/10)`
+    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panClean)) {
+      errs.pan = 'Invalid PAN format (e.g. AXTPD4419K)'
+    }
+
+    const aadhaarClean = data.aadhaar.replace(/\D/g, '')
+    if (!aadhaarClean) {
+      errs.aadhaar = 'Aadhaar is required'
+    } else if (aadhaarClean.length !== 12) {
+      errs.aadhaar = `Aadhaar must be exactly 12 digits (currently ${aadhaarClean.length}/12)`
+    }
+
+    const mobileClean = data.mobile.replace(/\D/g, '')
+    if (!mobileClean) {
+      errs.mobile = 'Mobile number is required'
+    } else if (mobileClean.length !== 10) {
+      errs.mobile = `Mobile number must be exactly 10 digits (currently ${mobileClean.length}/10)`
+    } else if (!/^[6-9]\d{9}$/.test(mobileClean)) {
+      errs.mobile = 'Enter a valid 10-digit Indian mobile number'
+    }
+
+    if (!data.email.trim()) {
+      errs.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+      errs.email = 'Enter a valid email address'
+    }
+
+    setErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    if (!validate()) return
     onNext()
   }
 
@@ -42,7 +136,7 @@ export const GSTStepBusiness = ({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="gst-step-business-form">
+      <form onSubmit={handleSubmit} noValidate className="gst-step-business-form">
         {/* Row 1: Legal Name & Trade Name */}
         <div className="gst-form-row">
           <div className="gst-form-group">
@@ -52,24 +146,24 @@ export const GSTStepBusiness = ({
             <input
               id="legalName"
               type="text"
-              className="gst-form-input"
+              className={`gst-form-input ${errors.legalName ? 'gst-form-input--error' : ''}`}
               value={data.legalName}
-              onChange={(e) => onChange('legalName', e.target.value)}
-              placeholder="e.g. Shree Deshmukh Traders"
-              required
+              onChange={(e) => handleLegalNameChange(e.target.value)}
+              placeholder="e.g. Shree Deshmukh Traders (text only)"
             />
+            {errors.legalName && <p className="gst-form-error-text">⚠️ {errors.legalName}</p>}
           </div>
 
           <div className="gst-form-group">
             <label className="gst-form-label" htmlFor="tradeName">
-              Trade name
+              Trade name (text only)
             </label>
             <input
               id="tradeName"
               type="text"
               className="gst-form-input"
               value={data.tradeName}
-              onChange={(e) => onChange('tradeName', e.target.value)}
+              onChange={(e) => handleTradeNameChange(e.target.value)}
               placeholder="e.g. Deshmukh Traders"
             />
           </div>
@@ -84,13 +178,13 @@ export const GSTStepBusiness = ({
             <input
               id="pan"
               type="text"
-              className="gst-form-input"
+              className={`gst-form-input ${errors.pan ? 'gst-form-input--error' : ''}`}
               value={data.pan}
-              onChange={(e) => onChange('pan', e.target.value.toUpperCase())}
+              onChange={(e) => handlePanChange(e.target.value)}
               placeholder="e.g. AXTPD4419K"
               maxLength={10}
-              required
             />
+            {errors.pan && <p className="gst-form-error-text">⚠️ {errors.pan}</p>}
           </div>
 
           <div className="gst-form-group">
@@ -100,13 +194,14 @@ export const GSTStepBusiness = ({
             <input
               id="aadhaar"
               type="text"
-              className="gst-form-input"
+              inputMode="numeric"
+              className={`gst-form-input ${errors.aadhaar ? 'gst-form-input--error' : ''}`}
               value={data.aadhaar}
-              onChange={(e) => onChange('aadhaar', e.target.value)}
-              placeholder="12-digit Aadhaar"
+              onChange={(e) => handleAadhaarChange(e.target.value)}
+              placeholder="12-digit Aadhaar (numbers only)"
               maxLength={12}
-              required
             />
+            {errors.aadhaar && <p className="gst-form-error-text">⚠️ {errors.aadhaar}</p>}
           </div>
         </div>
 
@@ -119,12 +214,14 @@ export const GSTStepBusiness = ({
             <input
               id="mobile"
               type="tel"
-              className="gst-form-input"
+              inputMode="numeric"
+              className={`gst-form-input ${errors.mobile ? 'gst-form-input--error' : ''}`}
               value={data.mobile}
-              onChange={(e) => onChange('mobile', e.target.value)}
-              placeholder="+91 98670 41255"
-              required
+              onChange={(e) => handleMobileChange(e.target.value)}
+              placeholder="10-digit mobile number"
+              maxLength={10}
             />
+            {errors.mobile && <p className="gst-form-error-text">⚠️ {errors.mobile}</p>}
           </div>
 
           <div className="gst-form-group">
@@ -134,12 +231,12 @@ export const GSTStepBusiness = ({
             <input
               id="email"
               type="email"
-              className="gst-form-input"
+              className={`gst-form-input ${errors.email ? 'gst-form-input--error' : ''}`}
               value={data.email}
-              onChange={(e) => onChange('email', e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="anjali@shreedeshmukh.in"
-              required
             />
+            {errors.email && <p className="gst-form-error-text">⚠️ {errors.email}</p>}
           </div>
         </div>
 

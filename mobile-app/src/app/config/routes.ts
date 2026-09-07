@@ -4,6 +4,7 @@ export const Routes = {
   AUTH: {
     LOGIN: "/(auth)/login",
     REGISTER: "/(auth)/createprofile",
+    OTP: "/(auth)/otp",
     PASSCODE: "/(auth)/passcode",
   },
   // Main Tabs

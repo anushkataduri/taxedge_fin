@@ -29,6 +29,7 @@ export const GSTFilingPayment = ({
 }: GSTFilingPaymentProps) => {
   const [method, setMethod] = useState<PaymentMethodType>('upi')
   const [upiId, setUpiId] = useState('anjali@okhdfcbank')
+  const [mobile, setMobile] = useState('9867041255')
   const [cardNumber, setCardNumber] = useState('')
   const [expiry, setExpiry] = useState('')
   const [cvv, setCvv] = useState('')
@@ -37,16 +38,124 @@ export const GSTFilingPayment = ({
   const [promoCode, setPromoCode] = useState('')
   const [discount, setDiscount] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const baseFee = Math.round(amount / 1.18)
   const gstAmount = amount - baseFee
   const totalPayable = amount - discount
 
+  const clearErr = (k: string) =>
+    setErrors((p) => {
+      if (!p[k]) return p
+      const { [k]: _, ...rest } = p
+      return rest
+    })
+
+  const handleMobileChange = (raw: string) => {
+    // Only numbers, max 10 digits
+    const cleaned = raw.replace(/\D/g, '').slice(0, 10)
+    setMobile(cleaned)
+    clearErr('mobile')
+  }
+
+  const handleCardNumberChange = (raw: string) => {
+    // Only numbers, max 16 digits
+    const cleaned = raw.replace(/\D/g, '').slice(0, 16)
+    const formatted = cleaned.replace(/(\d{4})(?=\d)/g, '$1 ')
+    setCardNumber(formatted)
+    clearErr('cardNumber')
+  }
+
+  const handleExpiryChange = (raw: string) => {
+    // Only numbers, formatted as MM / YY
+    const cleaned = raw.replace(/\D/g, '').slice(0, 4)
+    const formatted = cleaned.length > 2 ? `${cleaned.slice(0, 2)} / ${cleaned.slice(2)}` : cleaned
+    setExpiry(formatted)
+    clearErr('expiry')
+  }
+
+  const handleCvvChange = (raw: string) => {
+    // Only numbers, max 4 digits
+    const cleaned = raw.replace(/\D/g, '').slice(0, 4)
+    setCvv(cleaned)
+    clearErr('cvv')
+  }
+
+  const handleCardHolderChange = (raw: string) => {
+    // Only text (letters and spaces), no numbers
+    const cleaned = raw.replace(/[^a-zA-Z\s]/g, '')
+    setCardHolder(cleaned)
+    clearErr('cardHolder')
+  }
+
+  const handlePromoCodeChange = (raw: string) => {
+    // Letters automatically uppercase
+    setPromoCode(raw.toUpperCase().replace(/[^A-Z0-9]/g, ''))
+  }
+
   const handleApplyPromo = () => {
-    if (promoCode.trim().toUpperCase() === 'TAXEDGE50') setDiscount(500)
+    if (promoCode.trim().toUpperCase() === 'TAXEDGE50') {
+      setDiscount(500)
+    }
+  }
+
+  const validateForm = () => {
+    const errs: Record<string, string> = {}
+
+    // Mobile number: strictly numbers, exactly 10 digits
+    const cleanMobile = mobile.trim()
+    if (!cleanMobile) {
+      errs.mobile = 'Mobile number is required'
+    } else if (cleanMobile.length !== 10) {
+      errs.mobile = `Mobile number must be exactly 10 digits (currently ${cleanMobile.length}/10)`
+    } else if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      errs.mobile = 'Enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9'
+    }
+
+    if (method === 'upi') {
+      if (!upiId.trim()) {
+        errs.upiId = 'UPI ID is required'
+      } else if (!upiId.includes('@') || upiId.trim().length < 5) {
+        errs.upiId = 'Enter a valid UPI ID (e.g. name@bank)'
+      }
+    } else if (method === 'card' || method === 'credit') {
+      const rawCard = cardNumber.replace(/\s/g, '')
+      if (!rawCard) {
+        errs.cardNumber = 'Card number is required'
+      } else if (rawCard.length !== 16) {
+        errs.cardNumber = `Card number must be 16 digits (currently ${rawCard.length}/16)`
+      }
+
+      if (!expiry.trim()) {
+        errs.expiry = 'Expiry is required (MM / YY)'
+      } else {
+        const parts = expiry.replace(/\s/g, '').split('/')
+        const monthNum = parseInt(parts[0], 10)
+        if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+          errs.expiry = 'Invalid expiry month (01–12)'
+        }
+      }
+
+      if (!cvv.trim()) {
+        errs.cvv = 'CVV is required'
+      } else if (cvv.length < 3) {
+        errs.cvv = 'CVV must be 3 or 4 digits'
+      }
+
+      if (!cardHolder.trim()) {
+        errs.cardHolder = 'Name on card is required (letters only)'
+      } else if (cardHolder.trim().length < 3) {
+        errs.cardHolder = 'Please enter full name as printed on card'
+      }
+    }
+
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   const handlePay = () => {
+    if (!validateForm()) return
+
     setIsProcessing(true)
     setTimeout(() => {
       setIsProcessing(false)
@@ -122,7 +231,17 @@ export const GSTFilingPayment = ({
                 </div>
                 <div className="gst-pay-field" style={{ marginTop: '1rem' }}>
                   <label htmlFor="upi-id-inp" className="gst-pay-field-label">Or enter your UPI ID</label>
-                  <input id="upi-id-inp" className="gst-pay-inp" placeholder="yourname@bank" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+                  <input
+                    id="upi-id-inp"
+                    className={`gst-pay-inp ${errors.upiId ? 'gst-pay-inp--error' : ''}`}
+                    placeholder="yourname@bank"
+                    value={upiId}
+                    onChange={(e) => {
+                      setUpiId(e.target.value)
+                      clearErr('upiId')
+                    }}
+                  />
+                  {errors.upiId && <p className="gst-pay-field-err">⚠️ {errors.upiId}</p>}
                 </div>
               </div>
             )}
@@ -132,19 +251,50 @@ export const GSTFilingPayment = ({
                 <div className="gst-pay-fgrid">
                   <div className="gst-pay-field gst-pay-field--span">
                     <label className="gst-pay-field-label">Card number</label>
-                    <input className="gst-pay-inp" placeholder="1234 5678 9012 3456" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
+                    <input
+                      className={`gst-pay-inp ${errors.cardNumber ? 'gst-pay-inp--error' : ''}`}
+                      placeholder="1234 5678 9012 3456"
+                      maxLength={19}
+                      inputMode="numeric"
+                      value={cardNumber}
+                      onChange={(e) => handleCardNumberChange(e.target.value)}
+                    />
+                    {errors.cardNumber && <p className="gst-pay-field-err">⚠️ {errors.cardNumber}</p>}
                   </div>
                   <div className="gst-pay-field">
                     <label className="gst-pay-field-label">Expiry</label>
-                    <input className="gst-pay-inp" placeholder="MM / YY" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+                    <input
+                      className={`gst-pay-inp ${errors.expiry ? 'gst-pay-inp--error' : ''}`}
+                      placeholder="MM / YY"
+                      maxLength={7}
+                      inputMode="numeric"
+                      value={expiry}
+                      onChange={(e) => handleExpiryChange(e.target.value)}
+                    />
+                    {errors.expiry && <p className="gst-pay-field-err">⚠️ {errors.expiry}</p>}
                   </div>
                   <div className="gst-pay-field">
                     <label className="gst-pay-field-label">CVV</label>
-                    <input type="password" maxLength={4} className="gst-pay-inp" placeholder="•••" value={cvv} onChange={(e) => setCvv(e.target.value)} />
+                    <input
+                      type="password"
+                      maxLength={4}
+                      inputMode="numeric"
+                      className={`gst-pay-inp ${errors.cvv ? 'gst-pay-inp--error' : ''}`}
+                      placeholder="•••"
+                      value={cvv}
+                      onChange={(e) => handleCvvChange(e.target.value)}
+                    />
+                    {errors.cvv && <p className="gst-pay-field-err">⚠️ {errors.cvv}</p>}
                   </div>
                   <div className="gst-pay-field gst-pay-field--span">
-                    <label className="gst-pay-field-label">Name on card</label>
-                    <input className="gst-pay-inp" placeholder="As printed on the card" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} />
+                    <label className="gst-pay-field-label">Name on card (text only)</label>
+                    <input
+                      className={`gst-pay-inp ${errors.cardHolder ? 'gst-pay-inp--error' : ''}`}
+                      placeholder="As printed on the card"
+                      value={cardHolder}
+                      onChange={(e) => handleCardHolderChange(e.target.value)}
+                    />
+                    {errors.cardHolder && <p className="gst-pay-field-err">⚠️ {errors.cardHolder}</p>}
                   </div>
                 </div>
               </div>
@@ -165,6 +315,27 @@ export const GSTFilingPayment = ({
                 </div>
               </div>
             )}
+
+            {/* Mobile number for notifications */}
+            <div className="gst-pay-field" style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px dashed #e2e8f0' }}>
+              <label htmlFor="pay-mobile-inp" className="gst-pay-field-label">
+                Mobile number (for filing updates &amp; SMS receipt) <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>+91</span>
+                <input
+                  id="pay-mobile-inp"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  className={`gst-pay-inp ${errors.mobile ? 'gst-pay-inp--error' : ''}`}
+                  placeholder="10-digit mobile number"
+                  value={mobile}
+                  onChange={(e) => handleMobileChange(e.target.value)}
+                />
+              </div>
+              {errors.mobile && <p className="gst-pay-field-err">⚠️ {errors.mobile}</p>}
+            </div>
           </section>
 
           <div className="gst-pay-actions-box">
@@ -204,7 +375,12 @@ export const GSTFilingPayment = ({
             </div>
 
             <div className="gst-pay-promo-row">
-              <input className="gst-pay-promo-inp" placeholder="Promo code (e.g. TAXEDGE50)" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
+              <input
+                className="gst-pay-promo-inp"
+                placeholder="Promo code (e.g. TAXEDGE50)"
+                value={promoCode}
+                onChange={(e) => handlePromoCodeChange(e.target.value)}
+              />
               <button type="button" className="gst-pay-promo-btn" onClick={handleApplyPromo}>Apply</button>
             </div>
           </div>

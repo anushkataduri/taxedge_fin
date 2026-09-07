@@ -1,9 +1,9 @@
 import { moduleRegistry } from "./ModuleRegistry";
 import { container } from "./DependencyContainer";
-import { apiClient } from "../core/api/apiClient";
-import { tokenManager } from "../core/authentication/tokenManager";
-import { sessionManager } from "../core/authentication/sessionManager";
-import { logger } from "../core/logging/logger";
+import { apiClient } from "../../core/api/apiClient";
+import { tokenManager } from "../../core/authentication/tokenManager";
+import { sessionManager } from "../../core/authentication/sessionManager";
+import { logger } from "../../core/logging/logger";
 
 export class AppBootstrap {
   private static isInitialized = false;

@@ -31,19 +31,10 @@ export function PasscodeScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  const isMounted = useRef(true);
 
   useEffect(() => {
-    isMounted.current = true;
-    const t = setTimeout(() => {
-      if (isMounted.current) {
-        inputRef.current?.focus();
-      }
-    }, 200);
-    return () => {
-      isMounted.current = false;
-      clearTimeout(t);
-    };
+    const t = setTimeout(() => inputRef.current?.focus(), 200);
+    return () => clearTimeout(t);
   }, []);
 
   const phone = mobileNumber
@@ -62,23 +53,20 @@ export function PasscodeScreen() {
 
     try {
       const res = await loginWithPasscode(passcode);
-      if (!isMounted.current) return;
+      setLoading(false);
 
       if (res.success) {
         router.replace("/(main)/home" as any);
       } else {
-        setLoading(false);
         setError(res.error || "Incorrect passcode. Please try again.");
         setPasscode("");
         inputRef.current?.focus();
       }
     } catch {
-      if (isMounted.current) {
-        setLoading(false);
-        setError("Incorrect passcode. Please try again.");
-        setPasscode("");
-        inputRef.current?.focus();
-      }
+      setLoading(false);
+      setError("Incorrect passcode. Please try again.");
+      setPasscode("");
+      inputRef.current?.focus();
     }
   };
 
