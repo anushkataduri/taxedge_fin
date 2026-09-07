@@ -86,3 +86,22 @@
   .gst-period-gstin-card { flex-direction: column; align-items: flex-start; }
   .gst-period-gstin-card__check { align-self: flex-end; }
 }
+
+.gst-period-card--has-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444, 0 4px 16px rgba(239, 68, 68, 0.08) !important;
+}
+
+.gst-period-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0 0;
+  padding: 0.55rem 0.85rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.84rem;
+  font-weight: 600;
+}

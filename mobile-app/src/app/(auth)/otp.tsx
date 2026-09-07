@@ -12,23 +12,30 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { BrandColors } from "../../../../design-system/colors";
-import { BorderWidth } from "../../../../design-system/borders";
-import { Spacing } from "../../../../design-system/spacing";
+import { useTheme } from "../../hooks/use-theme";
+import { BrandColors, BorderWidth, Spacing } from "../../shared/theme";
 import { useAuthStore } from "../../store/authStore";
-import { PrimaryButton } from "../../../../shared/components/Button/PrimaryButton";
-import { styles } from "../../../../styles/app/(auth)/otp.styles";
+import { PrimaryButton } from "../../components/PrimaryButton";
+import { styles } from "../../styles/app/(auth)/otp.styles";
 
-export function OTPVerificationScreen() {
+/**
+ * Step one of signup: confirm the code sent to the mobile number. Entering the
+ * sixth digit - or pressing Verify - pushes on to /(auth)/createprofile, which
+ * owns the profile form and the registration itself.
+ */
+export default function OTPScreen() {
+  const colors = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { mobileNumber } = useAuthStore();
 
+  // OTP states
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
   const inputRef = useRef<TextInput>(null);
+
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -69,22 +76,23 @@ export function OTPVerificationScreen() {
             styles.otpBox,
             {
               borderColor: error
-                ? "#DC2626"
+                ? colors.error
                 : isCurrent
-                ? BrandColors.PRIMARY_BLUE_DARK
-                : BrandColors.CARD_BORDER,
-              borderWidth: isCurrent ? BorderWidth.medium : BorderWidth.thin,
+                  ? BrandColors.PRIMARY_BLUE_DARK
+                  : BrandColors.CARD_BORDER,
+              borderWidth: isCurrent ? BorderWidth.medium : BorderWidth.base,
               backgroundColor: isCurrent ? BrandColors.WHITE : BrandColors.BACKGROUND,
             },
           ]}
         >
-          <Text style={[styles.otpBoxText, { color: BrandColors.TEXT_PRIMARY }]}>
+          <Text style={[styles.otpBoxText, { color: colors.text }]}>
             {char}
           </Text>
         </View>
       );
     });
   };
+
 
   return (
     <KeyboardAvoidingView
@@ -108,12 +116,15 @@ export function OTPVerificationScreen() {
           <Text style={[styles.title, { color: BrandColors.PRIMARY_BLUE }]}>
             Verification Code
           </Text>
-          <Text style={[styles.subTitle, { color: BrandColors.TEXT_SECONDARY }]}>
+          <Text style={[styles.subTitle, { color: colors.textSecondary }]}>
             Enter the 6-digit OTP sent to +91 {mobileNumber || "9876543210"}
           </Text>
         </View>
 
-        <View style={styles.card}>
+        <View
+          style={styles.card}
+        >
+          {/* OTP Box Displays */}
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => inputRef.current?.focus()}
@@ -122,6 +133,7 @@ export function OTPVerificationScreen() {
             <View style={styles.otpGrid}>{renderOtpBoxes()}</View>
           </TouchableOpacity>
 
+          {/* Hidden text input */}
           <TextInput
             ref={inputRef}
             value={otp}
@@ -142,7 +154,7 @@ export function OTPVerificationScreen() {
           />
 
           {error ? (
-            <Text style={[styles.errorText, { color: "#DC2626" }]}>
+            <Text style={[styles.errorText, { color: colors.error }]}>
               {error}
             </Text>
           ) : null}
@@ -157,7 +169,9 @@ export function OTPVerificationScreen() {
 
           <View style={styles.resendContainer}>
             {timer > 0 ? (
-              <Text style={[styles.resendText, { color: BrandColors.TEXT_SECONDARY }]}>
+              <Text
+                style={[styles.resendText, { color: colors.textSecondary }]}
+              >
                 Resend code in{" "}
                 <Text style={{ color: "#0F2E5C", fontWeight: "700" }}>
                   0:{timer < 10 ? `0${timer}` : timer}
@@ -177,4 +191,3 @@ export function OTPVerificationScreen() {
   );
 }
 
-export default OTPVerificationScreen;

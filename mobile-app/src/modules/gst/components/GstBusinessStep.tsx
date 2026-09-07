@@ -12,15 +12,6 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../shared/theme";
 
-const BUSINESS_TYPES = [
-  "Proprietorship",
-  "Partnership Firm",
-  "Private Limited Company",
-  "Limited Liability Partnership (LLP)",
-  "One Person Company (OPC)",
-  "Trust / Society / NGO",
-];
-
 const NATURE_OF_BUSINESS = [
   "Trader",
   "Manufacturer",
@@ -39,8 +30,7 @@ const ADDRESS_PROOF_TYPES = [
 ];
 
 export interface GstBusinessFormData {
-  businessName: string;
-  businessType: string;
+  registeredBusinessName: string;
   natureOfBusiness: string;
   businessAddress: string;
   bankAccountNumber: string;
@@ -51,62 +41,30 @@ export interface GstBusinessFormData {
 interface GstBusinessStepProps {
   data: GstBusinessFormData;
   onChange: (fields: Partial<GstBusinessFormData>) => void;
-  onBlurField?: (field: keyof GstBusinessFormData) => void;
   errors?: Record<string, string>;
 }
 
 export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
   data,
   onChange,
-  onBlurField,
   errors = {},
 }) => {
-  const [showTypeModal, setShowTypeModal] = useState(false);
   const [showNatureModal, setShowNatureModal] = useState(false);
-
-  const handleBankAccChange = (text: string) => {
-    const cleaned = text.replace(/\D/g, "");
-    onChange({ bankAccountNumber: cleaned });
-  };
-
-  const handleIfscChange = (text: string) => {
-    const cleaned = text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-    onChange({ ifscCode: cleaned });
-  };
 
   return (
     <View style={styles.container}>
-      {/* Business / Trade Name */}
+      {/* Business Name */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Business / Trade Name *</Text>
+        <Text style={styles.label}>Business Name *</Text>
         <TextInput
-          style={[styles.input, errors.businessName && styles.inputError]}
-          placeholder="Enter your business name"
+          style={[styles.input, errors.registeredBusinessName && styles.inputError]}
+          placeholder="Enter registered business name"
           placeholderTextColor="#94A3B8"
-          value={data.businessName}
-          onChangeText={(t) => onChange({ businessName: t })}
-          onBlur={() => onBlurField?.("businessName")}
+          value={data.registeredBusinessName}
+          onChangeText={(t) => onChange({ registeredBusinessName: t })}
         />
-        {errors.businessName ? (
-          <Text style={styles.errorText}>{errors.businessName}</Text>
-        ) : null}
-      </View>
-
-      {/* Business Type Selector */}
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Business Type *</Text>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => setShowTypeModal(true)}
-          style={[styles.selectInput, errors.businessType && styles.inputError]}
-        >
-          <Text style={[styles.selectText, !data.businessType && styles.placeholderText]}>
-            {data.businessType || "Select business type"}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color="#1E293B" />
-        </TouchableOpacity>
-        {errors.businessType ? (
-          <Text style={styles.errorText}>{errors.businessType}</Text>
+        {errors.registeredBusinessName ? (
+          <Text style={styles.errorText}>{errors.registeredBusinessName}</Text>
         ) : null}
       </View>
 
@@ -137,7 +95,6 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
           placeholderTextColor="#94A3B8"
           value={data.businessAddress}
           onChangeText={(t) => onChange({ businessAddress: t })}
-          onBlur={() => onBlurField?.("businessAddress")}
         />
         {errors.businessAddress ? (
           <Text style={styles.errorText}>{errors.businessAddress}</Text>
@@ -149,11 +106,10 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
         <Text style={styles.label}>Bank Account Number *</Text>
         <TextInput
           style={[styles.input, errors.bankAccountNumber && styles.inputError]}
-          placeholder="Enter 9 to 18 digit account number"
+          placeholder="Enter account number"
           placeholderTextColor="#94A3B8"
           value={data.bankAccountNumber}
-          onChangeText={handleBankAccChange}
-          onBlur={() => onBlurField?.("bankAccountNumber")}
+          onChangeText={(t) => onChange({ bankAccountNumber: t })}
           keyboardType="numeric"
           maxLength={18}
         />
@@ -167,11 +123,10 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
         <Text style={styles.label}>IFSC Code *</Text>
         <TextInput
           style={[styles.input, errors.ifscCode && styles.inputError]}
-          placeholder="e.g. HDFC0001234"
+          placeholder="Enter IFSC code"
           placeholderTextColor="#94A3B8"
           value={data.ifscCode}
-          onChangeText={handleIfscChange}
-          onBlur={() => onBlurField?.("ifscCode")}
+          onChangeText={(t) => onChange({ ifscCode: t.toUpperCase() })}
           autoCapitalize="characters"
           maxLength={11}
         />
@@ -209,47 +164,6 @@ export const GstBusinessStep: React.FC<GstBusinessStepProps> = ({
           })}
         </View>
       </View>
-
-      {/* Business Type Modal */}
-      <Modal visible={showTypeModal} transparent animationType="fade">
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowTypeModal(false)}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Business Type</Text>
-            <FlatList
-              data={BUSINESS_TYPES}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.modalOption,
-                    data.businessType === item && styles.modalOptionSelected,
-                  ]}
-                  onPress={() => {
-                    onChange({ businessType: item });
-                    setShowTypeModal(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.modalOptionText,
-                      data.businessType === item && styles.modalOptionTextSelected,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                  {data.businessType === item && (
-                    <Ionicons name="checkmark" size={18} color={BrandColors.PRIMARY_BLUE} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       {/* Nature Modal */}
       <Modal visible={showNatureModal} transparent animationType="fade">

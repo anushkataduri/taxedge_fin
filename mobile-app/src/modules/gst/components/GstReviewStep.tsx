@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../shared/theme";
+import { GstPersonalFormData } from "./GstPersonalStep";
 import { GstBusinessFormData } from "./GstBusinessStep";
 
 interface GstReviewStepProps {
+  personalData: GstPersonalFormData;
   businessData: GstBusinessFormData;
   onEditStep: (stepIndex: number) => void;
   declared: boolean;
@@ -12,6 +14,7 @@ interface GstReviewStepProps {
 }
 
 export const GstReviewStep: React.FC<GstReviewStepProps> = ({
+  personalData,
   businessData,
   onEditStep,
   declared,
@@ -19,46 +22,69 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      {/* 1. Business Details Card */}
+      {/* 1. Personal Details Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Business Details</Text>
+          <Text style={styles.cardTitle}>Personal Details</Text>
           <TouchableOpacity onPress={() => onEditStep(0)} activeOpacity={0.7}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
-          <Text style={styles.label}>Business / Trade Name</Text>
-          <Text style={styles.value}>
-            {businessData.businessName || "—"}
-          </Text>
+          <Text style={styles.label}>PAN Number</Text>
+          <Text style={styles.value}>{personalData.panNumber || "PAVAN1234K"}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Business Type</Text>
-          <Text style={styles.value}>{businessData.businessType || "—"}</Text>
+          <Text style={styles.label}>Aadhaar</Text>
+          <Text style={styles.value}>{personalData.aadhaarNumber || "XXXX XXXX 1234"}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Nature of Business</Text>
-          <Text style={styles.value}>{businessData.natureOfBusiness || "Trader"}</Text>
+          <Text style={styles.label}>Mobile</Text>
+          <Text style={styles.value}>{personalData.mobileNumber || "+91 98765 43210"}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Business Address</Text>
-          <Text style={styles.value}>
-            {businessData.businessAddress || "—"}
-          </Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Address Proof</Text>
-          <Text style={styles.value}>{businessData.addressProofType || "—"}</Text>
+          <Text style={styles.label}>Email</Text>
+          <Text style={styles.value}>{personalData.emailAddress || "pavan@business.com"}</Text>
         </View>
       </View>
 
-      {/* 2. Bank Details Card */}
+      {/* 2. Business Details Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Business Details</Text>
+          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
+            <Text style={styles.editText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.row}>
+          <Text style={styles.label}>Business Name</Text>
+          <Text style={styles.value}>
+            {businessData.registeredBusinessName || personalData.businessName || "Pavan Enterprises"}
+          </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Nature</Text>
+          <Text style={styles.value}>{businessData.natureOfBusiness || "Trader"}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Address</Text>
+          <Text style={styles.value}>
+            {businessData.businessAddress || "MG Road, Bengaluru, 560001"}
+          </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Bank</Text>
+          <Text style={styles.value}>HDFC — XXXX1234</Text>
+        </View>
+      </View>
+
+      {/* 3. Bank Details Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Bank Details</Text>
-          <TouchableOpacity onPress={() => onEditStep(0)} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
         </View>
@@ -66,21 +92,25 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
         <View style={styles.row}>
           <Text style={styles.label}>Account No.</Text>
           <Text style={styles.value}>
-            {businessData.bankAccountNumber || "—"}
+            {businessData.bankAccountNumber || "XXXX XXXX 1234"}
           </Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>IFSC Code</Text>
-          <Text style={styles.value}>{businessData.ifscCode || "—"}</Text>
+          <Text style={styles.label}>IFSC</Text>
+          <Text style={styles.value}>{businessData.ifscCode || "HDFC0001234"}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Branch</Text>
+          <Text style={styles.value}>MG Road, Bengaluru</Text>
         </View>
       </View>
 
-      {/* 3. Documents Summary Card with Progress Bar */}
+      {/* 4. Documents Summary Card with Progress Bar */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Documents</Text>
-          <TouchableOpacity onPress={() => onEditStep(1)} activeOpacity={0.7}>
-            <Text style={styles.docCountText}>Uploaded</Text>
+          <TouchableOpacity onPress={() => onEditStep(2)} activeOpacity={0.7}>
+            <Text style={styles.docCountText}>4/9 Uploaded</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.docProgressBar}>
@@ -88,7 +118,7 @@ export const GstReviewStep: React.FC<GstReviewStepProps> = ({
         </View>
       </View>
 
-      {/* 4. Declaration Checkbox Card */}
+      {/* 5. Declaration Checkbox Card */}
       <TouchableOpacity
         style={styles.declarationCard}
         activeOpacity={0.8}

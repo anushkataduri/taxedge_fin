@@ -163,12 +163,8 @@ export const GstValidators = {
    */
   validateBusinessField: (field: string, value: string): string => {
     switch (field) {
-      case "businessName":
       case "registeredBusinessName":
-        if (!GstValidators.isNotEmpty(value, 2)) return "Business / Trade Name is required";
-        return "";
-      case "businessType":
-        if (!GstValidators.isNotEmpty(value, 2)) return "Please select a business type";
+        if (!GstValidators.isNotEmpty(value, 2)) return "Registered business name is required";
         return "";
       case "natureOfBusiness":
         if (!GstValidators.isNotEmpty(value, 2)) return "Please select nature of business";
@@ -204,17 +200,9 @@ export const GstValidators = {
    * Functional whole-form validator for Business Details using reduce (no loops)
    */
   validateBusinessForm: (data: Record<string, string>): Record<string, string> => {
-    const fields = [
-      "businessName",
-      "businessType",
-      "natureOfBusiness",
-      "businessAddress",
-      "bankAccountNumber",
-      "ifscCode",
-    ];
+    const fields = ["registeredBusinessName", "natureOfBusiness", "businessAddress", "bankAccountNumber", "ifscCode"];
     return fields.reduce<Record<string, string>>((acc, key) => {
-      const value = data[key] || (key === "businessName" ? data["registeredBusinessName"] : "") || "";
-      const error = GstValidators.validateBusinessField(key, value);
+      const error = GstValidators.validateBusinessField(key, data[key] || "");
       return error ? { ...acc, [key]: error } : acc;
     }, {});
   },

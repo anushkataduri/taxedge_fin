@@ -322,7 +322,7 @@ export const GSTStepPayment = ({
                 className="gst-promo-input"
                 placeholder="Promo code"
                 value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
               />
               <button
                 type="button"

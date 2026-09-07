@@ -66,6 +66,10 @@ export const GSTServices = ({ services }: GSTServicesProps) => {
       navigate(routePaths.gst.registration);
     } else if (service.iconType === 'filing' || service.id === '2') {
       navigate(routePaths.gst.filing);
+    } else if (service.iconType === 'compliance' || service.id === '3') {
+      navigate(routePaths.gst.compliance);
+    } else if (service.iconType === 'cancellation' || service.id === '4') {
+      navigate(routePaths.gst.cancellation);
     } else {
       navigate(routePaths.gst.registration);
     }
