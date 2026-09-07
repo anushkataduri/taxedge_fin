@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,7 +35,7 @@ export function LandingScreen() {
           styles.scrollContent,
           {
             paddingTop: insets.top,
-            paddingBottom: Math.max(insets.bottom + 6, 14),
+            paddingBottom: Math.max(insets.bottom + 8, 28),
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -70,18 +69,6 @@ export function LandingScreen() {
             {/* Get Started Button */}
             <View style={styles.ctaSection}>
               <GetStartedButton onPress={handleNavigateToLogin} />
-            </View>
-
-            {/* Already have an account? Login */}
-            <View style={styles.loginRow}>
-              <Text style={styles.loginMutedText}>Already have an account? </Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={handleNavigateToLogin}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.loginLinkText}>Login</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -138,22 +125,5 @@ const styles = StyleSheet.create({
   ctaSection: {
     marginTop: 14,
     width: "100%",
-  },
-  loginRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  loginMutedText: {
-    fontSize: 13.5,
-    color: "#64748B",
-    fontWeight: "500",
-  },
-  loginLinkText: {
-    fontSize: 13.5,
-    color: "#0052FF",
-    fontWeight: "700",
   },
 });
