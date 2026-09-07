@@ -73,7 +73,7 @@ const SIDEBAR_SECTIONS: SidebarNavSection[] = [
       {
         id: 'itr-tds',
         label: 'ITR & TDS',
-        to: routePaths.itr,
+        to: routePaths.itr.root,
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="1" x2="12" y2="23" />

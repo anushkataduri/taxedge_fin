@@ -68,7 +68,7 @@ const mockSummary: DashboardSummary = {
       statusTone: 'warning',
       progress: 46,
       icon: '📊',
-      to: routePaths.itr,
+      to: routePaths.itr.root,
     },
     {
       id: 'app-loan-1',
@@ -174,7 +174,7 @@ export const quickServices: QuickService[] = [
     id: 'itr',
     label: 'ITR & TDS',
     description: 'Income tax returns for every profile, TDS refunds, revised returns and notice replies.',
-    to: routePaths.itr,
+    to: routePaths.itr.root,
     icon: '📊',
     price: '₹3,000',
     priceUnit: 'from',

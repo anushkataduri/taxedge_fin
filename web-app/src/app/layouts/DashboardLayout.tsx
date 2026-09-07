@@ -226,6 +226,34 @@ export const DashboardLayout = () => {
                 </>
               ) : location.pathname === routePaths.gst.root ? (
                 <span className="shell__breadcrumb-current">GST</span>
+              ) : location.pathname.startsWith('/itr/') ? (
+                <>
+                  <Link to={routePaths.itr.root}>ITR &amp; TDS</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  <span className="shell__breadcrumb-current">
+                    {location.pathname === routePaths.itr.fileItr
+                      ? 'File ITR'
+                      : location.pathname === routePaths.itr.trackMyReturn
+                        ? 'Track Return'
+                        : location.pathname === routePaths.itr.itrFiling
+                          ? 'ITR Filing'
+                          : location.pathname === routePaths.itr.tdsRefund
+                            ? 'TDS Refund'
+                            : location.pathname === routePaths.itr.previousYearItr
+                              ? 'Previous Year ITR'
+                              : location.pathname === routePaths.itr.revisedItr
+                                ? 'Revised ITR'
+                                : location.pathname === routePaths.itr.taxNoticeAssistance
+                                  ? 'Notice Assistance'
+                                  : location.pathname === routePaths.itr.tdsRefundEstimator
+                                    ? 'TDS Refund Estimator'
+                                    : location.pathname === routePaths.itr.taxComputation
+                                      ? 'Tax Computation'
+                                      : 'Filing'}
+                  </span>
+                </>
+              ) : location.pathname === routePaths.itr.root ? (
+                <span className="shell__breadcrumb-current">ITR &amp; TDS</span>
               ) : currentNav.sectionTitle === 'Services' ? (
                 <>
                   <Link to={routePaths.services}>Services</Link>
