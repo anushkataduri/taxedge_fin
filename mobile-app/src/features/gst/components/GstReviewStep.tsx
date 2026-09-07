@@ -186,6 +186,11 @@ const styles = StyleSheet.create({
     color: BrandColors.TEXT_PRIMARY,
     fontFamily: Platform.select({ ios: "System", android: "sans-serif-medium" }),
   },
+  valueMultiline: {
+    flex: 1,
+    textAlign: "right",
+    marginLeft: 16,
+  },
   docProgressBar: {
     height: 5,
     backgroundColor: "#F1F5F9",
