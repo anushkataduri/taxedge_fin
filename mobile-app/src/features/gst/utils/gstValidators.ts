@@ -125,4 +125,97 @@ export const GstValidators = {
     if (!GstValidators.isNotEmpty(data.customerId, 4)) errs.customerId = "Customer / User ID is required";
     return errs;
   },
+
+  /**
+   * Functional field-level validator for GST Personal Step
+   */
+  validatePersonalField: (field: string, value: string): string => {
+    switch (field) {
+      case "panNumber":
+        if (!value.trim()) return "PAN Number is required";
+        if (!GstValidators.isValidPan(value)) return "Enter a valid 10-digit PAN (e.g. ABCDE1234F)";
+        return "";
+      case "aadhaarNumber":
+        if (!value.trim()) return "Aadhaar Number is required";
+        if (!GstValidators.isValidAadhaar(value)) return "Enter a valid 12-digit Aadhaar Number";
+        return "";
+      case "mobileNumber":
+        if (!value.trim()) return "Mobile Number is required";
+        if (!GstValidators.isValidMobile(value)) return "Enter a valid 10-digit mobile number (starts with 6-9)";
+        return "";
+      case "emailAddress":
+        if (!value.trim()) return "Email Address is required";
+        if (!GstValidators.isValidEmail(value)) return "Enter a valid email address (e.g. name@domain.com)";
+        return "";
+      case "businessName":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Business / Trade Name is required";
+        return "";
+      case "businessType":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Please select a business type";
+        return "";
+      default:
+        return "";
+    }
+  },
+
+  /**
+   * Functional field-level validator for GST Business Step
+   */
+  validateBusinessField: (field: string, value: string): string => {
+    switch (field) {
+      case "businessName":
+      case "registeredBusinessName":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Business / Trade Name is required";
+        return "";
+      case "businessType":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Please select a business type";
+        return "";
+      case "natureOfBusiness":
+        if (!GstValidators.isNotEmpty(value, 2)) return "Please select nature of business";
+        return "";
+      case "businessAddress":
+        if (!GstValidators.isNotEmpty(value, 5)) return "Full business address with pincode is required";
+        return "";
+      case "bankAccountNumber":
+        if (!value.trim()) return "Bank account number is required";
+        if (!GstValidators.isValidBankAccount(value)) return "Enter a valid bank account number (9 to 18 digits)";
+        return "";
+      case "ifscCode":
+        if (!value.trim()) return "IFSC code is required";
+        if (!GstValidators.isValidIfsc(value)) return "Enter a valid 11-digit IFSC code (e.g. HDFC0001234)";
+        return "";
+      default:
+        return "";
+    }
+  },
+
+  /**
+   * Functional whole-form validator for Personal Details using reduce (no loops)
+   */
+  validatePersonalForm: (data: Record<string, string>): Record<string, string> => {
+    const fields = ["panNumber", "aadhaarNumber", "mobileNumber", "emailAddress", "businessName", "businessType"];
+    return fields.reduce<Record<string, string>>((acc, key) => {
+      const error = GstValidators.validatePersonalField(key, data[key] || "");
+      return error ? { ...acc, [key]: error } : acc;
+    }, {});
+  },
+
+  /**
+   * Functional whole-form validator for Business Details using reduce (no loops)
+   */
+  validateBusinessForm: (data: Record<string, string>): Record<string, string> => {
+    const fields = [
+      "businessName",
+      "businessType",
+      "natureOfBusiness",
+      "businessAddress",
+      "bankAccountNumber",
+      "ifscCode",
+    ];
+    return fields.reduce<Record<string, string>>((acc, key) => {
+      const value = data[key] || (key === "businessName" ? data["registeredBusinessName"] : "") || "";
+      const error = GstValidators.validateBusinessField(key, value);
+      return error ? { ...acc, [key]: error } : acc;
+    }, {});
+  },
 };

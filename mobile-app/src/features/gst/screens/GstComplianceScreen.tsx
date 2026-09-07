@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,17 +18,23 @@ import { GstDatePickerModal } from "../components/common/GstDatePickerModal";
 import { GstSuccessAnimationScreen } from "../components/common/GstSuccessAnimationScreen";
 import { GstReconciliationSection } from "../components/compliance/GstReconciliationSection";
 import { GstNoticeResponseSection } from "../components/compliance/GstNoticeResponseSection";
+import { UniversalDraftModal } from "../../../shared/components/UniversalDraftModal";
+import { useUniversalDraftGuard } from "../../../shared/hooks/useUniversalDraftGuard";
 import { GstValidators } from "../utils/gstValidators";
 import { styles } from "./GstComplianceScreen.styles";
+import { useApplicationStore } from "../../../store/applicationStore";
+import { useNotificationStore } from "../../../store/notificationStore";
 
-const FINANCIAL_YEARS = ["2025-26", "2024-25", "2023-24", "2022-23"];
+const FINANCIAL_YEARS = ["2026-27", "2025-26", "2024-25", "2023-24"];
 const REQUEST_TYPES = ["Reconciliation Support", "Notice Response"];
 
 export default function GstComplianceScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const [gstin, setGstin] = useState("29PAVAN1234K1Z5");
+  // Form States: Clean & Dynamic
+  const [gstin, setGstin] = useState("");
   const [financialYear, setFinancialYear] = useState("");
   const [requestType, setRequestType] = useState<"Reconciliation Support" | "Notice Response" | "">("");
 
@@ -39,7 +45,6 @@ export default function GstComplianceScreen() {
   const [noticeNumber, setNoticeNumber] = useState("");
   const [noticeDoc, setNoticeDoc] = useState<{ uri: string; name: string; size: string } | null>(null);
   const [dueDate, setDueDate] = useState("");
-  const [replyDraft, setReplyDraft] = useState("");
 
   // Modals & UI States
   const [showFyModal, setShowFyModal] = useState(false);
@@ -49,6 +54,33 @@ export default function GstComplianceScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Universal Draft Guard
+  const {
+    showDraftModal,
+    markSubmitted,
+    handleSaveAndExit,
+    handleDiscardAndExit,
+    handleCancel,
+  } = useUniversalDraftGuard({
+    isDirty: () =>
+      Boolean(
+        gstin ||
+        financialYear ||
+        requestType ||
+        purchaseDoc ||
+        salesDoc ||
+        noticeDoc ||
+        noticeNumber
+      ),
+    onSaveDraft: () => {
+      // Draft saved
+    },
+    onDiscardDraft: () => {
+      // Discarded
+    },
+    isSubmitted: () => isSubmitted,
+  });
+
   const clearError = (key: string) => {
     setErrors((prev) => {
       const next = { ...prev };
@@ -57,10 +89,16 @@ export default function GstComplianceScreen() {
     });
   };
 
+  const handleGstinChange = (text: string) => {
+    const cleaned = text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    setGstin(cleaned);
+    clearError("gstin");
+  };
+
   const validateForm = (): boolean => {
     const errs: Record<string, string> = {};
 
-    if (!GstValidators.isValidGstin(gstin)) errs.gstin = "Enter a valid 15-character GSTIN";
+    if (!GstValidators.isValidGstin(gstin)) errs.gstin = "Enter a valid 15-character GSTIN (e.g. 29AAAAA0000A1Z5)";
     if (!financialYear) errs.financialYear = "Financial year is required.";
     if (!requestType) errs.requestType = "Please select a request type.";
 
@@ -88,15 +126,42 @@ export default function GstComplianceScreen() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
+      markSubmitted();
       setIsSubmitted(true);
+
+      // Create application in store
+      const appId = useApplicationStore.getState().createApplication(
+        "gst-compliance",
+        `GST Compliance (${requestType})`,
+        "GST",
+        {
+          gstin,
+          financialYear,
+          requestType,
+          noticeNumber,
+          dueDate,
+        },
+        [
+          ...(purchaseDoc ? [purchaseDoc.name] : []),
+          ...(salesDoc ? [salesDoc.name] : []),
+          ...(noticeDoc ? [noticeDoc.name] : []),
+        ],
+        999
+      );
+
+      useNotificationStore.getState().addNotification(
+        "Compliance Request Received",
+        `Your GST Compliance request (${requestType}) for ${gstin} has been submitted. App ID: ${appId}.`,
+        "gst"
+      );
     }, 800);
   };
 
   if (isSubmitted) {
     return (
       <GstSuccessAnimationScreen
-        title="Request Submitted!"
-        subtitle="Your compliance request has been submitted successfully.&#10;&#10;Our team will review your documents and get back to you soon."
+        title="Compliance Request Submitted!"
+        subtitle="Your compliance request has been submitted successfully.\n\nOur CA team will review your records and prepare response within 24 hours."
       />
     );
   }
@@ -106,15 +171,16 @@ export default function GstComplianceScreen() {
       {/* Header */}
       <View style={[styles.headerBar, { paddingTop: Math.max(insets.top, 12) + 6 }]}>
         <TouchableOpacity activeOpacity={0.7} onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={BrandColors.TEXT_PRIMARY} />
+          <Ionicons name="chevron-back" size={20} color={BrandColors.TEXT_PRIMARY} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>GST Compliance</Text>
+        <Text style={styles.headerTitle}>GST Compliance & Notice</Text>
         <View style={styles.placeholderBox} />
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         bounces={true}
@@ -123,17 +189,22 @@ export default function GstComplianceScreen() {
         {/* Top Info Banner */}
         <GstServiceBanner
           iconName="document-text"
-          text="For reconciling records or responding to a department notice"
+          text="Reconcile purchase ITC registers against GSTR-2B or file notice responses with a certified CA"
         />
 
-        {/* GSTIN Field */}
+        {/* GSTIN Field (Clean & Editable) */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>GSTIN</Text>
+          <Text style={styles.label}>GSTIN (15-Character) <Text style={styles.star}>*</Text></Text>
           <TextInput
-            style={[styles.input, styles.readOnlyInput]}
+            style={[styles.input, errors.gstin && styles.inputError]}
+            placeholder="e.g. 29AAAAA0000A1Z5"
+            placeholderTextColor="#94A3B8"
             value={gstin}
-            editable={false}
+            onChangeText={handleGstinChange}
+            autoCapitalize="characters"
+            maxLength={15}
           />
+          {errors.gstin ? <Text style={styles.errorText}>{errors.gstin}</Text> : null}
         </View>
 
         {/* Period / Financial Year Dropdown */}
@@ -221,7 +292,7 @@ export default function GstComplianceScreen() {
           disabled={isSubmitting}
         >
           <Text style={styles.actionOrangeBtnText}>
-            {isSubmitting ? "Submitting..." : "Submit Request"}
+            {isSubmitting ? "Submitting..." : "Submit Compliance Request"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -260,6 +331,19 @@ export default function GstComplianceScreen() {
           clearError("dueDate");
         }}
         onClose={() => setShowDateModal(false)}
+      />
+
+      {/* Universal Save As Draft Confirmation Modal */}
+      <UniversalDraftModal
+        visible={showDraftModal}
+        title="Save Compliance Draft?"
+        message="You have unsaved changes in your GST compliance request. Save your progress so you can resume anytime without re-entering details."
+        saveButtonText="Save as Draft & Exit"
+        discardButtonText="Discard & Exit"
+        cancelButtonText="Keep Editing"
+        onSaveAndExit={handleSaveAndExit}
+        onDiscardAndExit={handleDiscardAndExit}
+        onCancel={handleCancel}
       />
     </View>
   );

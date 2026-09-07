@@ -11,13 +11,18 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../../shared/theme";
 
 const PAYMENT_METHODS = [
-  { id: "upi", title: "UPI", subtitle: "Pay via any UPI app", iconName: "phone-portrait", iconBg: "#DCFCE7", iconColor: "#16A34A" },
+  { id: "upi", title: "UPI", subtitle: "Pay via Google Pay, PhonePe, Paytm, BHIM", iconName: "phone-portrait", iconBg: "#DCFCE7", iconColor: "#16A34A" },
   { id: "debit", title: "Debit Card", subtitle: "Visa / Mastercard / RuPay", iconName: "card", iconBg: "#E0F2FE", iconColor: "#0284C7" },
   { id: "credit", title: "Credit Card", subtitle: "Visa / Mastercard / Amex", iconName: "card", iconBg: "#E0F2FE", iconColor: "#2563EB" },
-  { id: "netbanking", title: "Net Banking", subtitle: "All major banks", iconName: "business", iconBg: "#F1F5F9", iconColor: "#64748B" },
+  { id: "netbanking", title: "Net Banking", subtitle: "All major Indian banks", iconName: "business", iconBg: "#F1F5F9", iconColor: "#64748B" },
 ];
 
-const UPI_APPS = ["PhonePe", "GPay", "Paytm", "BHIM"];
+const UPI_APPS = [
+  { label: "PhonePe", suffix: "@ybl" },
+  { label: "GPay", suffix: "@okaxis" },
+  { label: "Paytm", suffix: "@paytm" },
+  { label: "BHIM", suffix: "@upi" },
+];
 
 interface GstPaymentMethodStepProps {
   amount?: string;
@@ -36,17 +41,22 @@ export const GstPaymentMethodStep: React.FC<GstPaymentMethodStepProps> = ({
   onChangeUpiId,
   upiError,
 }) => {
+  const handleSelectApp = (suffix: string) => {
+    const username = upiId.includes("@") ? upiId.split("@")[0] : upiId;
+    onChangeUpiId(username ? `${username}${suffix}` : suffix);
+  };
+
   return (
     <View style={styles.container}>
-      {/* Top Total Amount Banner */}
+      {/* Top Total Amount Card */}
       <View style={styles.topAmountCard}>
         <View style={styles.topRow}>
-          <Text style={styles.discountLabel}>Discount</Text>
-          <Text style={styles.discountValue}>₹0</Text>
+          <Text style={styles.discountLabel}>Filing Service & Reconciliation</Text>
+          <Text style={styles.discountValue}>Includes 18% GST</Text>
         </View>
         <View style={styles.amountDivider} />
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total Amount</Text>
+          <Text style={styles.totalLabel}>Total Payable Amount</Text>
           <Text style={styles.totalValue}>{amount}</Text>
         </View>
       </View>
@@ -82,12 +92,12 @@ export const GstPaymentMethodStep: React.FC<GstPaymentMethodStepProps> = ({
       {/* Expanded UPI Section */}
       {selectedMethod === "upi" && (
         <View style={styles.upiCard}>
-          <Text style={styles.upiLabel}>UPI ID *</Text>
+          <Text style={styles.upiLabel}>ENTER UPI ID *</Text>
           <TextInput
             style={[styles.upiInput, upiError ? styles.upiInputError : null]}
             value={upiId}
             onChangeText={onChangeUpiId}
-            placeholder="pavan@ybl"
+            placeholder="e.g. mobileNumber@upi / yourname@okhdfcbank"
             placeholderTextColor="#94A3B8"
             autoCapitalize="none"
           />
@@ -96,12 +106,12 @@ export const GstPaymentMethodStep: React.FC<GstPaymentMethodStepProps> = ({
           <View style={styles.upiAppsRow}>
             {UPI_APPS.map((app) => (
               <TouchableOpacity
-                key={app}
+                key={app.label}
                 style={styles.appPill}
                 activeOpacity={0.7}
-                onPress={() => onChangeUpiId(`pavan@${app.toLowerCase()}`)}
+                onPress={() => handleSelectApp(app.suffix)}
               >
-                <Text style={styles.appPillText}>{app}</Text>
+                <Text style={styles.appPillText}>{app.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -112,7 +122,7 @@ export const GstPaymentMethodStep: React.FC<GstPaymentMethodStepProps> = ({
       <View style={styles.securityBox}>
         <Ionicons name="shield-checkmark" size={16} color="#083B75" />
         <Text style={styles.securityText}>
-          Safe and secure payments with 256-bit SSL encryption
+          256-bit encrypted & PCI-DSS compliant secure checkout
         </Text>
       </View>
     </View>
@@ -120,7 +130,7 @@ export const GstPaymentMethodStep: React.FC<GstPaymentMethodStepProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { paddingTop: 8, gap: 12 },
+  container: { paddingTop: 4, gap: 12, paddingBottom: 20 },
   topAmountCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
@@ -130,7 +140,7 @@ const styles = StyleSheet.create({
   },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   discountLabel: { fontSize: 13, color: "#64748B" },
-  discountValue: { fontSize: 13, fontWeight: "600", color: "#16A34A" },
+  discountValue: { fontSize: 12, fontWeight: "600", color: "#16A34A" },
   amountDivider: { height: 1, backgroundColor: "#F1F5F9", marginBottom: 10 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   totalLabel: { fontSize: 14, fontWeight: "700", color: BrandColors.TEXT_PRIMARY },
@@ -163,7 +173,7 @@ const styles = StyleSheet.create({
   },
   radioCircleActive: { backgroundColor: BrandColors.PRIMARY_ORANGE, borderColor: BrandColors.PRIMARY_ORANGE },
   upiCard: { backgroundColor: "#FFFFFF", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#EEF2F6", marginTop: 2 },
-  upiLabel: { fontSize: 12, fontWeight: "700", color: "#64748B", marginBottom: 6, letterSpacing: 0.5 },
+  upiLabel: { fontSize: 11.5, fontWeight: "700", color: "#64748B", marginBottom: 8, letterSpacing: 0.5 },
   upiInput: {
     height: 48,
     backgroundColor: "#F8FAFC",
@@ -188,7 +198,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
-  appPillText: { fontSize: 11.5, fontWeight: "600", color: BrandColors.TEXT_PRIMARY },
+  appPillText: { fontSize: 12, fontWeight: "600", color: BrandColors.TEXT_PRIMARY },
   securityBox: {
     flexDirection: "row",
     backgroundColor: "#EAF1FE",
@@ -198,6 +208,7 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
     gap: 8,
     alignItems: "center",
+    marginTop: 2,
     marginBottom: 6,
   },
   securityText: { flex: 1, fontSize: 11.5, color: "#083B75", lineHeight: 16 },

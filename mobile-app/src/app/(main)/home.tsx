@@ -198,6 +198,8 @@ export default function HomeScreen() {
 
   const customer = useAuthStore((state) => state.customer);
   const applications = useApplicationStore((state) => state.applications);
+  const gstDraft = useApplicationStore((state) => state.gstDraft);
+  const gstFilingDraft = useApplicationStore((state) => state.gstFilingDraft);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   const customerName = Maybe.of(customer)
@@ -517,6 +519,87 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* ---------- In-progress draft application banners ---------- */}
+        {gstDraft && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push("/service/gst-registration")}
+            style={{
+              backgroundColor: isDark ? colors.backgroundElement : "#FEF0E6",
+              borderRadius: 18,
+              padding: 16,
+              marginBottom: 16,
+              borderWidth: 1.5,
+              borderColor: colors.orange,
+              shadowColor: colors.orange,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 2,
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.orange, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 }}>
+                <Ionicons name="time" size={13} color="#FFFFFF" />
+                <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>INCOMPLETE APPLICATION</Text>
+              </View>
+              <Text style={{ fontSize: 11.5, color: colors.textSecondary }}>{gstDraft.updatedAt ? `Saved ${gstDraft.updatedAt}` : "Saved as Draft"}</Text>
+            </View>
+
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 4 }}>
+              GST Registration
+            </Text>
+            <Text style={{ fontSize: 12.5, color: colors.textSecondary, marginBottom: 12 }}>
+              Step {(gstDraft.stepIndex || 0) + 1} of 4 • Pick up right where you left off
+            </Text>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: isDark ? colors.border : "#FFD8BF", paddingTop: 10 }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.orange }}>Resume Application</Text>
+              <Ionicons name="arrow-forward-circle" size={20} color={colors.orange} />
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {gstFilingDraft && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push("/service/gst-filing")}
+            style={{
+              backgroundColor: isDark ? colors.backgroundElement : "#EAF1FE",
+              borderRadius: 18,
+              padding: 16,
+              marginBottom: 16,
+              borderWidth: 1.5,
+              borderColor: colors.primary,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 2,
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.primary, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 }}>
+                <Ionicons name="time" size={13} color="#FFFFFF" />
+                <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>INCOMPLETE FILING</Text>
+              </View>
+              <Text style={{ fontSize: 11.5, color: colors.textSecondary }}>{gstFilingDraft.updatedAt ? `Saved ${gstFilingDraft.updatedAt}` : "Saved as Draft"}</Text>
+            </View>
+
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 4 }}>
+              GST Return Filing ({gstFilingDraft.periodData?.filingMonth || "Current Period"})
+            </Text>
+            <Text style={{ fontSize: 12.5, color: colors.textSecondary, marginBottom: 12 }}>
+              Step {(gstFilingDraft.stepIndex || 0) + 1} of 4 • Continue your return filing
+            </Text>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: isDark ? colors.border : "#BFDBFE", paddingTop: 10 }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.primary }}>Resume Filing</Text>
+              <Ionicons name="arrow-forward-circle" size={20} color={colors.primary} />
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* ---------- Recent applications ---------- */}
         <View style={styles.sectionHeader}>
