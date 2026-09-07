@@ -15,17 +15,17 @@ export { CardFormData, NetBankingFormData };
 export type PaymentMethodType = "upi" | "debit" | "credit" | "netbanking";
 
 const UPI_APPS = [
-  { id: "phonepe", label: "PhonePe", handle: "okhdfcbank" },
+  { id: "phonepe", label: "PhonePe", handle: "ybl" },
   { id: "gpay", label: "GPay", handle: "okaxis" },
   { id: "paytm", label: "Paytm", handle: "paytm" },
   { id: "bhim", label: "BHIM", handle: "upi" },
 ];
 
 const METHODS = [
-  { id: "upi" as const, title: "UPI", subtitle: "Pay via any UPI app", icon: "grid-outline", iconBg: "#EEF2FF", iconColor: "#6366F1" },
-  { id: "debit" as const, title: "Debit Card", subtitle: "Visa / Mastercard / RuPay", icon: "card-outline", iconBg: "#E0F2FE", iconColor: "#0284C7" },
-  { id: "credit" as const, title: "Credit Card", subtitle: "Visa / Mastercard / Amex", icon: "card-outline", iconBg: "#E0F2FE", iconColor: "#0284C7" },
-  { id: "netbanking" as const, title: "Net Banking", subtitle: "All major banks", icon: "business-outline", iconBg: "#F1F5F9", iconColor: "#475569" },
+  { id: "upi" as const, title: "UPI", subtitle: "Pay via any UPI app", icon: "phone-portrait", iconBg: "#DCFCE7", iconColor: "#16A34A" },
+  { id: "debit" as const, title: "Debit Card", subtitle: "Visa / Mastercard / RuPay", icon: "card", iconBg: "#E0F2FE", iconColor: "#0284C7" },
+  { id: "credit" as const, title: "Credit Card", subtitle: "Visa / Mastercard / Amex", icon: "card", iconBg: "#E0F2FE", iconColor: "#2563EB" },
+  { id: "netbanking" as const, title: "Net Banking", subtitle: "All major banks", icon: "business", iconBg: "#F1F5F9", iconColor: "#475569" },
 ];
 
 interface PaymentMethodSelectorProps {
@@ -34,11 +34,11 @@ interface PaymentMethodSelectorProps {
   upiId: string;
   onChangeUpiId: (id: string) => void;
   upiError?: string;
-  cardData: CardFormData;
-  onChangeCardData: (fields: Partial<CardFormData>) => void;
+  cardData?: CardFormData;
+  onChangeCardData?: (fields: Partial<CardFormData>) => void;
   cardErrors?: Record<string, string>;
-  netBankingData: NetBankingFormData;
-  onChangeNetBankingData: (fields: Partial<NetBankingFormData>) => void;
+  netBankingData?: NetBankingFormData;
+  onChangeNetBankingData?: (fields: Partial<NetBankingFormData>) => void;
   netBankingErrors?: Record<string, string>;
 }
 
@@ -48,16 +48,16 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   upiId,
   onChangeUpiId,
   upiError,
-  cardData,
-  onChangeCardData,
+  cardData = { cardNumber: "", cardHolder: "", expiry: "", cvv: "" },
+  onChangeCardData = () => {},
   cardErrors = {},
-  netBankingData,
-  onChangeNetBankingData,
+  netBankingData = { selectedBank: "", customerId: "" },
+  onChangeNetBankingData = () => {},
   netBankingErrors = {},
 }) => {
   const handleSelectApp = (handle: string) => {
-    const username = upiId.includes("@") ? upiId.split("@")[0] : upiId || "pavan";
-    onChangeUpiId(`${username}@${handle}`);
+    const username = upiId.includes("@") ? upiId.split("@")[0] : upiId || "";
+    onChangeUpiId(username ? `${username}@${handle}` : `@${handle}`);
   };
 
   return (
@@ -94,7 +94,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           <Text style={styles.upiLabel}>UPI ID *</Text>
           <TextInput
             style={[styles.upiInput, upiError ? styles.inputError : null]}
-            placeholder="pavan@ybl"
+            placeholder="e.g. mobileNumber@upi / yourname@okhdfcbank"
             placeholderTextColor="#94A3B8"
             value={upiId}
             onChangeText={onChangeUpiId}
@@ -136,7 +136,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
       {/* PCI-DSS Security Banner */}
       <View style={styles.securityBanner}>
-        <Ionicons name="shield-checkmark" size={16} color="#2563EB" />
+        <Ionicons name="shield-checkmark" size={16} color="#083B75" />
         <Text style={styles.securityText}>
           256-bit encrypted & PCI-DSS compliant secure payment gateway
         </Text>
@@ -147,7 +147,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
 const styles = StyleSheet.create({
   container: { gap: 10 },
-  heading: { fontSize: 15.5, fontWeight: "700", color: BrandColors.TEXT_PRIMARY, marginBottom: 4 },
+  heading: { fontSize: 15, fontWeight: "700", color: BrandColors.TEXT_PRIMARY, marginBottom: 4 },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
     gap: 8,
     alignItems: "center",
+    marginTop: 4,
   },
   securityText: { flex: 1, fontSize: 11.5, color: "#083B75", lineHeight: 16 },
 });

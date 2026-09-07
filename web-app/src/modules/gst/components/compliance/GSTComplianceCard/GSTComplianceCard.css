@@ -1,0 +1,123 @@
+.gst-compliance-card {
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.gst-compliance-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.gst-compliance-card__icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--taxedge-light-blue, #eaf1fe);
+  color: var(--taxedge-blue, #0b5ed7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gst-compliance-card__icon-box svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gst-compliance-card__title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text, #172033);
+}
+
+.gst-compliance-card__desc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #64748b);
+  line-height: 1.45;
+}
+
+.gst-compliance-card__meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.gst-compliance-card__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gst-compliance-card__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.gst-compliance-card__value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text, #172033);
+}
+
+.gst-compliance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  background-color: var(--taxedge-light-blue, #eaf1fe);
+  color: var(--taxedge-blue, #0b5ed7);
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.gst-compliance-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.gst-compliance-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--taxedge-orange, #f97316);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(249, 115, 22, 0.35);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.gst-compliance-btn:hover {
+  background-color: #ea580c;
+  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .gst-compliance-card__meta {
+    grid-template-columns: 1fr;
+  }
+}

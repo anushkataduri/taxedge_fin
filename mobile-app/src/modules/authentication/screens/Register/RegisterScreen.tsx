@@ -8,14 +8,12 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Image,
   Alert,
   Modal,
   ActivityIndicator,
   type TextInputProps,
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Svg, { Path } from "react-native-svg";
@@ -42,9 +40,8 @@ type SignupErrors = Partial<Record<keyof SignupForm, string>>;
 export function RegisterScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { register, setAvatar } = useAuthStore();
+  const { register } = useAuthStore();
 
-  const [avatarUri, setAvatarUriState] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileErrors, setProfileErrors] = useState<SignupErrors>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -84,29 +81,6 @@ export function RegisterScreen() {
     address: "",
   });
 
-  const handlePickPhoto = () => {
-    Alert.alert("Profile Photo", "Choose an option", [
-      {
-        text: "Take Photo",
-        onPress: async () => {
-          const p = await ImagePicker.requestCameraPermissionsAsync();
-          if (!p.granted) return Alert.alert("Permission needed", "Camera access is required.");
-          const res = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
-          if (!res.canceled && res.assets?.[0]?.uri) setAvatarUriState(res.assets[0].uri);
-        },
-      },
-      {
-        text: "Choose from Gallery",
-        onPress: async () => {
-          const p = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (!p.granted) return Alert.alert("Permission needed", "Gallery access is required.");
-          const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
-          if (!res.canceled && res.assets?.[0]?.uri) setAvatarUriState(res.assets[0].uri);
-        },
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  };
 
   const updateForm = (key: keyof SignupForm, val: string) => {
     setForm((p) => ({ ...p, [key]: val }));
@@ -192,7 +166,6 @@ export function RegisterScreen() {
 
       setProfileLoading(false);
       if (res.success) {
-        if (avatarUri) setAvatar(avatarUri);
         router.replace("/(main)/home" as any);
       } else {
         Alert.alert("Registration Error", res.error || "Failed to create account.");
@@ -241,39 +214,18 @@ export function RegisterScreen() {
               { paddingTop: Math.max(insets.top + HEADER_INSET_TOP_OFFSET, MIN_HEADER_TOP) },
             ]}
           >
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => router.back()}
-              style={styles.backBtnWhite}
-            >
-              <Ionicons name="arrow-back" size={24} color={BrandColors.WHITE} />
-            </TouchableOpacity>
+            <View style={styles.headerRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.back()}
+                style={styles.backBtnWhite}
+              >
+                <Ionicons name="arrow-back" size={24} color={BrandColors.WHITE} />
+              </TouchableOpacity>
 
-            <View style={styles.headerTextGroup}>
               <Text style={styles.headerTitleWhite}>Create Account</Text>
             </View>
           </View>
-        </View>
-
-        <View style={styles.avatarSection}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={handlePickPhoto}
-            style={styles.avatarWrap}
-          >
-            <View style={styles.avatarOuterRing}>
-              <View style={styles.avatarInnerCircle}>
-                {avatarUri ? (
-                  <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-                ) : (
-                  <Ionicons name="camera" size={38} color={BrandColors.PRIMARY_BLUE_DARK} />
-                )}
-              </View>
-            </View>
-            <View style={styles.avatarPlusBadge}>
-              <Ionicons name="add" size={18} color={BrandColors.WHITE} />
-            </View>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.formSection}>
