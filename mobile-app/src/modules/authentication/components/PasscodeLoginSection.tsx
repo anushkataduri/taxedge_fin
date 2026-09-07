@@ -23,19 +23,24 @@ export function PasscodeLoginSection({
 }: PasscodeLoginSectionProps) {
   const colors = useTheme();
   const inputRef = useRef<TextInput>(null);
+  const autoSubmitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (autoSubmitTimeout.current) clearTimeout(autoSubmitTimeout.current);
+    };
   }, []);
 
   const handleChangeText = (text: string) => {
     const clean = text.replace(/[^0-9]/g, "");
     onChangePasscode(clean);
     if (clean.length === 6) {
-      setTimeout(() => {
+      if (autoSubmitTimeout.current) clearTimeout(autoSubmitTimeout.current);
+      autoSubmitTimeout.current = setTimeout(() => {
         onLogin();
       }, 50);
     }

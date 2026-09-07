@@ -22,15 +22,22 @@ import {
   GoogleLoginSection,
   ErrorBanner,
 } from "../components";
+import type { AuthFlowState } from "../types/auth.types";
 
 const HEADER_OFFSET = Spacing.md;
 const FOOTER_OFFSET = Spacing.base;
 const MIN_SCROLL_PADDING = Spacing.xl + Spacing.xs;
 
-export function AuthenticationScreen() {
+interface AuthenticationScreenProps {
+  initialFlowState?: AuthFlowState;
+}
+
+export function AuthenticationScreen({ initialFlowState }: AuthenticationScreenProps = {}) {
   const colors = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const isMounted = useRef(true);
+  const isFirstMount = useRef(true);
 
   const {
     isLoggedIn,
@@ -63,31 +70,57 @@ export function AuthenticationScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  // If already authenticated, redirect to home
+  // Track component mount status
+  useEffect(() => {
+    isMounted.current = true;
+    if (initialFlowState) {
+      setAuthFlowState(initialFlowState);
+    }
+    return () => {
+      isMounted.current = false;
+    };
+  }, [initialFlowState]);
+
+  // If already authenticated, redirect to home safely after mount
   useEffect(() => {
     if (isLoggedIn) {
-      router.replace("/(main)/home" as any);
+      const raf = requestAnimationFrame(() => {
+        if (isMounted.current) {
+          router.replace("/(main)/home" as any);
+        }
+      });
+      return () => cancelAnimationFrame(raf);
     }
   }, [isLoggedIn]);
 
-  // Timer interval
+  // Timer interval with proper lifecycle cleanup
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
     const isOtpActive =
       authFlowState === "OTP_VERIFICATION" || authFlowState === "FORGOT_PASSCODE_OTP";
-    if (isOtpActive && otpTimer > 0) {
+    if (isOtpActive) {
       interval = setInterval(() => {
-        decrementTimer();
+        if (useAuthStore.getState().otpTimer > 0) {
+          decrementTimer();
+        } else {
+          clearInterval(interval);
+        }
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [authFlowState, otpTimer]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [authFlowState]);
 
-  // Animate on state transition
+  // Animate on state transition only (not on initial mount), clean up on unmount
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     fadeAnim.setValue(0.3);
     slideAnim.setValue(10);
-    Animated.parallel([
+    const anim = Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 250,
@@ -98,7 +131,9 @@ export function AuthenticationScreen() {
         duration: 250,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, [authFlowState]);
 
   // Subtitle per state
@@ -124,7 +159,7 @@ export function AuthenticationScreen() {
 
   const handleOtpVerify = async () => {
     const res = await verifyOtp();
-    if (res.success && !res.isExistingUser) {
+    if (res.success && !res.isExistingUser && isMounted.current) {
       // New user -> navigate to original TaxEdge registration form
       router.push("/(auth)/createprofile" as any);
     }
@@ -132,7 +167,7 @@ export function AuthenticationScreen() {
 
   const handleLoginSubmit = async () => {
     const res = await loginWithPasscode();
-    if (res.success) {
+    if (res.success && isMounted.current) {
       router.replace("/(main)/home" as any);
     }
   };

@@ -18,11 +18,6 @@ export function LandingScreen() {
   const insets = useSafeAreaInsets();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      router.replace("/(main)/home");
-    }
-  }, [isLoggedIn]);
 
   const handleNavigateToLogin = () => {
     router.push("/(auth)/login");
