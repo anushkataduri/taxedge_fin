@@ -34,20 +34,20 @@ export default function PaymentsScreen() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>("upi");
 
   // Inputs for all payment methods
-  const [upiId, setUpiId] = useState("pavan@ybl");
+  const [upiId, setUpiId] = useState("");
   const [upiError, setUpiError] = useState("");
 
   const [cardData, setCardData] = useState<CardFormData>({
-    cardNumber: "4532 8921 7843 1209",
-    cardHolder: "Pavan Kalyan",
-    expiry: "08/28",
-    cvv: "892",
+    cardNumber: "",
+    cardHolder: "",
+    expiry: "",
+    cvv: "",
   });
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
 
   const [netBankingData, setNetBankingData] = useState<NetBankingFormData>({
-    selectedBank: "HDFC Bank",
-    customerId: "HDFC984210",
+    selectedBank: "",
+    customerId: "",
   });
   const [netBankingErrors, setNetBankingErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);

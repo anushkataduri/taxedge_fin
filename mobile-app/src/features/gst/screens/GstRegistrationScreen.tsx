@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  Platform,
-  KeyboardAvoidingView,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -14,132 +12,221 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { BrandColors } from "../../../shared/theme";
 import { GstValidators } from "../utils/gstValidators";
 import { GstStepIndicator } from "../components/GstStepIndicator";
-import { GstPersonalStep, GstPersonalFormData } from "../components/GstPersonalStep";
 import { GstBusinessStep, GstBusinessFormData } from "../components/GstBusinessStep";
-import { GstDocumentChecklistStep } from "../components/GstDocumentChecklistStep";
-import { GstDocumentUploadStep } from "../components/GstDocumentUploadStep";
+import {
+  GstUnifiedDocumentStep,
+  INITIAL_DOCUMENTS,
+  DocumentItem,
+} from "../components/GstUnifiedDocumentStep";
 import { GstReviewStep } from "../components/GstReviewStep";
 import { GstApplicationStatusStep } from "../components/GstApplicationStatusStep";
+import { useApplicationStore } from "../../../store/applicationStore";
+import { useNotificationStore } from "../../../store/notificationStore";
+import { UniversalDraftModal } from "../../../shared/components/UniversalDraftModal";
+import { useUniversalDraftGuard } from "../../../shared/hooks/useUniversalDraftGuard";
 import { styles } from "./GstRegistrationScreen.styles";
 
-const STEPS = ["Personal", "Business", "Documents", "Review", "Submit"];
+const STEPS = ["Business", "Documents", "Review", "Submit"];
 
 export const GstRegistrationScreen: React.FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [screenIndex, setScreenIndex] = useState(0);
   const [declared, setDeclared] = useState(true);
+  const [createdAppId, setCreatedAppId] = useState<string>("GST-2026-84920");
 
-  const [personalData, setPersonalData] = useState<GstPersonalFormData>({
-    panNumber: "",
-    aadhaarNumber: "",
-    mobileNumber: "",
-    emailAddress: "",
+  // Stores
+  const gstDraft = useApplicationStore((state) => state.gstDraft);
+  const saveGstDraft = useApplicationStore((state) => state.saveGstDraft);
+  const clearGstDraft = useApplicationStore((state) => state.clearGstDraft);
+  const createApplication = useApplicationStore((state) => state.createApplication);
+  const addNotification = useNotificationStore((state) => state.addNotification);
+
+  // Form State
+  const [businessData, setBusinessData] = useState<GstBusinessFormData>({
     businessName: "",
     businessType: "",
-  });
-
-  const [personalErrors, setPersonalErrors] = useState<Record<string, string>>({});
-
-  const [businessData, setBusinessData] = useState<GstBusinessFormData>({
-    registeredBusinessName: "",
     natureOfBusiness: "",
     businessAddress: "",
     bankAccountNumber: "",
     ifscCode: "",
     addressProofType: "Rental Agreement",
   });
-
   const [businessErrors, setBusinessErrors] = useState<Record<string, string>>({});
 
-  const getActiveStepForIndicator = () => {
-    if (screenIndex === 0) return 0;
-    if (screenIndex === 1) return 1;
-    if (screenIndex === 2 || screenIndex === 3) return 2;
-    if (screenIndex === 4) return 3;
-    return 4;
-  };
+  // Unified Documents State
+  const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
+
+  // Universal Draft Guard Hook
+  const {
+    showDraftModal,
+    markSubmitted,
+    handleSaveAndExit,
+    handleDiscardAndExit,
+    handleCancel,
+  } = useUniversalDraftGuard({
+    isDirty: () => {
+      const hasBusiness = Object.values(businessData).some((v) => Boolean(v && v.trim() && v !== "Rental Agreement"));
+      const hasDocs = documents.some((d) => Boolean(d.fileUri));
+      return hasBusiness || hasDocs;
+    },
+    onSaveDraft: () => {
+      saveGstDraft({
+        id: "draft-gst",
+        stepIndex: screenIndex,
+        personalData: {},
+        businessData: businessData as any,
+        documents: documents as any,
+        updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      });
+    },
+    onDiscardDraft: () => {
+      clearGstDraft();
+    },
+    isSubmitted: () => screenIndex >= 3,
+  });
+
+  // Scroll to top on step transition
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  }, [screenIndex]);
+
+  // Auto-restore draft on mount if available
+  useEffect(() => {
+    if (gstDraft) {
+      if (gstDraft.businessData) {
+        setBusinessData((prev) => ({
+          ...prev,
+          ...gstDraft.businessData,
+          businessName: gstDraft.businessData.businessName || (gstDraft.businessData as any).registeredBusinessName || (gstDraft.personalData as any)?.businessName || "",
+          businessType: gstDraft.businessData.businessType || (gstDraft.personalData as any)?.businessType || "",
+        }));
+      }
+      if (gstDraft.documents && Array.isArray(gstDraft.documents)) {
+        setDocuments(gstDraft.documents as DocumentItem[]);
+      }
+      if (typeof gstDraft.stepIndex === "number" && gstDraft.stepIndex < 3) {
+        setScreenIndex(gstDraft.stepIndex);
+      }
+    }
+  }, []);
 
   const getScreenTitle = () => {
     switch (screenIndex) {
       case 0: return "GST Registration";
-      case 1: return "Business Details";
-      case 2: return "Document Checklist";
-      case 3: return "Upload Documents";
-      case 4: return "Review Application";
+      case 1: return "Upload Documents";
+      case 2: return "Review Application";
       default: return "Application Status";
     }
   };
 
   const getButtonText = () => {
     switch (screenIndex) {
-      case 0: return "Continue to Business Details";
-      case 1: return "Continue to Documents";
-      case 2: return "Upload Documents";
-      case 3: return "Continue to Review";
-      case 4: return "Submit Application";
+      case 0: return "Continue to Documents";
+      case 1: return "Continue to Review";
+      case 2: return "Submit Application";
       default: return "";
     }
   };
 
-  const validatePersonalDetails = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!GstValidators.isValidPan(personalData.panNumber)) {
-      errs.panNumber = "Enter a valid 10-digit PAN (e.g. ABCDE1234F)";
-    }
-    if (!GstValidators.isValidAadhaar(personalData.aadhaarNumber)) {
-      errs.aadhaarNumber = "Enter a valid 12-digit Aadhaar Number";
-    }
-    if (!GstValidators.isValidMobile(personalData.mobileNumber)) {
-      errs.mobileNumber = "Enter a valid 10-digit mobile number";
-    }
-    if (!GstValidators.isValidEmail(personalData.emailAddress)) {
-      errs.emailAddress = "Enter a valid email address (e.g. name@domain.com)";
-    }
-    if (!GstValidators.isNotEmpty(personalData.businessName, 2)) {
-      errs.businessName = "Business / Trade name is required";
-    }
-    if (!GstValidators.isNotEmpty(personalData.businessType, 2)) {
-      errs.businessType = "Please select a business type";
-    }
+  // Functional real-time change & blur handlers for Business
+  const handleBusinessChange = (fields: Partial<GstBusinessFormData>) => {
+    setBusinessData((prev) => {
+      const updated = { ...prev, ...fields };
+      setBusinessErrors((prevErrors) => {
+        return Object.keys(fields).reduce<Record<string, string>>((acc, k) => {
+          const key = k as keyof GstBusinessFormData;
+          if (acc[key]) {
+            const revalidated = GstValidators.validateBusinessField(key, updated[key] || "");
+            return { ...acc, [key]: revalidated };
+          }
+          return acc;
+        }, { ...prevErrors });
+      });
+      return updated;
+    });
+  };
 
-    setPersonalErrors(errs);
-    if (Object.keys(errs).length > 0) {
-      Alert.alert("Incomplete Details", "Please fill all required personal fields correctly to continue.");
-      return false;
-    }
-    return true;
+  const handleBusinessBlur = (field: keyof GstBusinessFormData) => {
+    const errorMsg = GstValidators.validateBusinessField(field, businessData[field] || "");
+    setBusinessErrors((prev) => ({ ...prev, [field]: errorMsg }));
   };
 
   const validateBusinessDetails = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!GstValidators.isNotEmpty(businessData.registeredBusinessName, 2)) {
-      errs.registeredBusinessName = "Registered business name is required";
-    }
-    if (!GstValidators.isNotEmpty(businessData.natureOfBusiness, 2)) {
-      errs.natureOfBusiness = "Please select nature of business";
-    }
-    if (!GstValidators.isNotEmpty(businessData.businessAddress, 5)) {
-      errs.businessAddress = "Full business address with pincode is required";
-    }
-    if (!GstValidators.isValidBankAccount(businessData.bankAccountNumber)) {
-      errs.bankAccountNumber = "Enter a valid bank account number (9 to 18 digits)";
-    }
-    if (!GstValidators.isValidIfsc(businessData.ifscCode)) {
-      errs.ifscCode = "Enter a valid 11-digit IFSC code (e.g. HDFC0001234)";
-    }
-
+    const errs = GstValidators.validateBusinessForm(businessData as unknown as Record<string, string>);
     setBusinessErrors(errs);
     if (Object.keys(errs).length > 0) {
-      Alert.alert("Incomplete Details", "Please fill all required business and bank fields correctly to continue.");
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       return false;
     }
     return true;
   };
 
+  const validateDocuments = (): boolean => {
+    const mandatoryMissing = documents.filter((d) => d.required && !d.fileUri);
+    if (mandatoryMissing.length > 0) {
+      const missingNames = mandatoryMissing.map((d) => d.name).join(", ");
+      Alert.alert(
+        "Required Documents Missing",
+        `Please upload the following required documents before proceeding:\n\n• ${missingNames.split(", ").join("\n• ")}`
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const hasAnyDataEntered = () => {
+    const hasBusiness = Object.values(businessData).some((v) => Boolean(v && v.trim() && v !== "Rental Agreement"));
+    const hasDocs = documents.some((d) => Boolean(d.fileUri));
+    return hasBusiness || hasDocs;
+  };
+
   const handleBack = () => {
-    if (screenIndex > 0 && screenIndex < 5) {
+    if (screenIndex === 3) {
+      router.replace("/(main)/home");
+      return;
+    }
+
+    if (screenIndex > 0) {
       setScreenIndex((prev) => prev - 1);
+      return;
+    }
+
+    // On Step 0 (or exit) - prompt save draft if any data entered
+    if (hasAnyDataEntered()) {
+      Alert.alert(
+        "Save Application?",
+        "Do you want to save your entered details as a draft so you can continue later?",
+        [
+          {
+            text: "Save as Draft & Exit",
+            onPress: () => {
+              saveGstDraft({
+                id: "draft-gst",
+                stepIndex: screenIndex,
+                personalData: {},
+                businessData: businessData as any,
+                documents: documents as any,
+                updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              });
+              router.back();
+            },
+          },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              clearGstDraft();
+              router.back();
+            },
+          },
+          {
+            text: "Keep Editing",
+            style: "cancel",
+          },
+        ]
+      );
     } else {
       router.back();
     }
@@ -147,16 +234,58 @@ export const GstRegistrationScreen: React.FC = () => {
 
   const handleContinue = () => {
     if (screenIndex === 0) {
-      if (!validatePersonalDetails()) return;
-    } else if (screenIndex === 1) {
       if (!validateBusinessDetails()) return;
-    } else if (screenIndex === 4 && !declared) {
-      Alert.alert("Declaration Required", "Please accept the declaration to submit your application.");
-      return;
-    }
+      saveGstDraft({
+        id: "draft-gst",
+        stepIndex: 1,
+        personalData: {},
+        businessData: businessData as any,
+        documents: documents as any,
+        updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      });
+      setScreenIndex(1);
+    } else if (screenIndex === 1) {
+      if (!validateDocuments()) return;
+      saveGstDraft({
+        id: "draft-gst",
+        stepIndex: 2,
+        personalData: {},
+        businessData: businessData as any,
+        documents: documents as any,
+        updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      });
+      setScreenIndex(2);
+    } else if (screenIndex === 2) {
+      if (!declared) {
+        Alert.alert("Declaration Required", "Please accept the declaration to submit your application.");
+        return;
+      }
 
-    if (screenIndex < 5) {
-      setScreenIndex((prev) => prev + 1);
+      // Final Submission: Create real application in store
+      const appId = createApplication(
+        "gst-registration",
+        "GST Registration",
+        "GST",
+        {
+          ...businessData,
+          applicantName: businessData.businessName || "Your Business",
+          appliedDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        },
+        documents.map((d) => d.name),
+        1499
+      );
+
+      setCreatedAppId(appId);
+      markSubmitted();
+      clearGstDraft();
+
+      addNotification(
+        "GST Application Submitted",
+        `Your GST Registration (ID: ${appId}) has been successfully submitted and is under verification.`,
+        "gst"
+      );
+
+      setScreenIndex(3);
     }
   };
 
@@ -175,20 +304,21 @@ export const GstRegistrationScreen: React.FC = () => {
         <View style={styles.placeholderBox} />
       </View>
 
-      {/* 5-Step Indicator */}
-      {screenIndex < 5 && (
+      {/* 4-Step Indicator */}
+      {screenIndex < 3 && (
         <GstStepIndicator
           steps={STEPS}
-          currentStep={getActiveStepForIndicator()}
+          currentStep={screenIndex}
         />
       )}
 
       {/* Main Scroll Content */}
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          screenIndex === 5 && { paddingBottom: 24 },
+          screenIndex === 3 && { paddingBottom: 24 },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -197,57 +327,52 @@ export const GstRegistrationScreen: React.FC = () => {
         nestedScrollEnabled={true}
       >
         {screenIndex === 0 && (
-          <GstPersonalStep
-            data={personalData}
-            errors={personalErrors}
-            onChange={(fields) => {
-              setPersonalData((prev) => ({ ...prev, ...fields }));
-              setPersonalErrors((prev) => {
-                const next = { ...prev };
-                Object.keys(fields).forEach((k) => delete next[k]);
-                return next;
-              });
-            }}
+          <GstBusinessStep
+            data={businessData}
+            errors={businessErrors}
+            onChange={handleBusinessChange}
+            onBlurField={handleBusinessBlur}
           />
         )}
 
         {screenIndex === 1 && (
-          <GstBusinessStep
-            data={businessData}
-            errors={businessErrors}
-            onChange={(fields) => {
-              setBusinessData((prev) => ({ ...prev, ...fields }));
-              setBusinessErrors((prev) => {
-                const next = { ...prev };
-                Object.keys(fields).forEach((k) => delete next[k]);
-                return next;
+          <GstUnifiedDocumentStep
+            documents={documents}
+            onUpdateDocuments={(updated) => {
+              setDocuments(updated);
+              saveGstDraft({
+                id: "draft-gst",
+                stepIndex: 1,
+                personalData: {},
+                businessData: businessData as any,
+                documents: updated as any,
+                updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
               });
             }}
           />
         )}
 
-        {screenIndex === 2 && <GstDocumentChecklistStep />}
-
-        {screenIndex === 3 && <GstDocumentUploadStep />}
-
-        {screenIndex === 4 && (
+        {screenIndex === 2 && (
           <GstReviewStep
-            personalData={personalData}
             businessData={businessData}
-            onEditStep={(stepIdx) => {
-              if (stepIdx === 0) setScreenIndex(0);
-              if (stepIdx === 1) setScreenIndex(1);
-              if (stepIdx === 2) setScreenIndex(2);
-            }}
+            documents={documents}
+            onEditStep={(stepIdx) => setScreenIndex(stepIdx)}
             declared={declared}
             onToggleDeclaration={() => setDeclared((prev) => !prev)}
           />
         )}
 
-        {screenIndex === 5 && <GstApplicationStatusStep />}
+        {screenIndex === 3 && (
+          <GstApplicationStatusStep
+            appId={createdAppId}
+            businessName={businessData.businessName || "Your Business"}
+            appliedDate="Today"
+            serviceName="GST Registration"
+          />
+        )}
 
-        {/* Action Button - In scroll view so it stays at the bottom and never floats over inputs */}
-        {screenIndex < 5 && (
+        {/* Action Button - In scroll view so it stays cleanly at the bottom */}
+        {screenIndex < 3 && (
           <View style={styles.buttonWrapper}>
             <TouchableOpacity
               activeOpacity={0.85}
@@ -259,6 +384,19 @@ export const GstRegistrationScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Universal Save As Draft Confirmation Modal */}
+      <UniversalDraftModal
+        visible={showDraftModal}
+        title="Save Application Progress?"
+        message="You have unsaved changes in your GST registration application. Save your progress so you can resume anytime without re-entering details."
+        saveButtonText="Save as Draft & Exit"
+        discardButtonText="Discard & Exit"
+        cancelButtonText="Keep Editing"
+        onSaveAndExit={handleSaveAndExit}
+        onDiscardAndExit={handleDiscardAndExit}
+        onCancel={handleCancel}
+      />
     </View>
   );
 };

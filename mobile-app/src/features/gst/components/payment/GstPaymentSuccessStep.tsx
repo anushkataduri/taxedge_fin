@@ -7,28 +7,44 @@ import { BrandColors } from "../../../../shared/theme";
 interface GstPaymentSuccessStepProps {
   amount?: string;
   serviceName?: string;
+  txnId?: string;
+  paymentMethod?: string;
+  filingPeriod?: string;
+  gstin?: string;
   onViewReceipt: () => void;
   onViewApplication: () => void;
 }
 
 export const GstPaymentSuccessStep: React.FC<GstPaymentSuccessStepProps> = ({
   amount = "₹2,344",
-  serviceName = "GST Registration",
+  serviceName = "GST Filing (GSTR-3B)",
+  txnId = "TXN" + Date.now().toString().slice(-8),
+  paymentMethod = "UPI",
+  filingPeriod = "July 2026",
+  gstin = "29ABCDE1234F1Z5",
   onViewReceipt,
   onViewApplication,
 }) => {
   const router = useRouter();
 
+  const formattedDateTime = new Date().toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <View style={styles.container}>
-      {/* Top Green Hero Card */}
+      {/* Top Blue Hero Card */}
       <View style={styles.heroCard}>
         <View style={styles.checkCircle}>
           <Ionicons name="checkmark" size={32} color={BrandColors.PRIMARY_ORANGE} />
         </View>
 
         <Text style={styles.heroTitle}>Payment Successful!</Text>
-        <Text style={styles.heroSubtitle}>Your payment has been received successfully.</Text>
+        <Text style={styles.heroSubtitle}>Your return preparation has been initiated.</Text>
 
         <View style={styles.amountCard}>
           <Text style={styles.amountLabel}>Amount Paid</Text>
@@ -38,12 +54,12 @@ export const GstPaymentSuccessStep: React.FC<GstPaymentSuccessStepProps> = ({
 
       {/* Transaction Details Card */}
       <View style={styles.detailsCard}>
-        <Text style={styles.detailsHeading}>Transaction Details</Text>
+        <Text style={styles.detailsHeading}>Transaction Summary</Text>
         <View style={styles.divider} />
 
         <View style={styles.row}>
           <Text style={styles.label}>Transaction ID</Text>
-          <Text style={styles.value}>TXN202608190001</Text>
+          <Text style={styles.value}>{txnId}</Text>
         </View>
 
         <View style={styles.row}>
@@ -52,19 +68,29 @@ export const GstPaymentSuccessStep: React.FC<GstPaymentSuccessStepProps> = ({
         </View>
 
         <View style={styles.row}>
+          <Text style={styles.label}>GSTIN</Text>
+          <Text style={styles.value}>{gstin}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Filing Period</Text>
+          <Text style={styles.value}>{filingPeriod}</Text>
+        </View>
+
+        <View style={styles.row}>
           <Text style={styles.label}>Payment Method</Text>
-          <Text style={styles.value}>UPI — pavan@ybl</Text>
+          <Text style={styles.value}>{paymentMethod}</Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Date & Time</Text>
-          <Text style={styles.value}>19 Aug 2026, 4:22 PM</Text>
+          <Text style={styles.value}>{formattedDateTime}</Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Status</Text>
           <View style={styles.statusBadge}>
-            <Ionicons name="checkbox" size={14} color={BrandColors.PRIMARY_ORANGE} />
+            <Ionicons name="checkmark-circle" size={14} color={BrandColors.PRIMARY_ORANGE} />
             <Text style={styles.statusText}>Successful</Text>
           </View>
         </View>
@@ -86,7 +112,7 @@ export const GstPaymentSuccessStep: React.FC<GstPaymentSuccessStepProps> = ({
           activeOpacity={0.85}
           onPress={onViewApplication}
         >
-          <Text style={styles.applicationBtnText}>View Application</Text>
+          <Text style={styles.applicationBtnText}>Track Application</Text>
         </TouchableOpacity>
       </View>
 
@@ -94,9 +120,9 @@ export const GstPaymentSuccessStep: React.FC<GstPaymentSuccessStepProps> = ({
       <TouchableOpacity
         style={styles.homeLink}
         activeOpacity={0.7}
-        onPress={() => router.replace("/service/gst")}
+        onPress={() => router.replace("/(main)/home")}
       >
-        <Text style={styles.homeLinkText}>Back to Home</Text>
+        <Text style={styles.homeLinkText}>Back to Home Dashboard</Text>
       </TouchableOpacity>
     </View>
   );
@@ -106,7 +132,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 4,
-    paddingBottom: 16,
+    paddingBottom: 24,
     justifyContent: "space-between",
   },
   heroCard: {

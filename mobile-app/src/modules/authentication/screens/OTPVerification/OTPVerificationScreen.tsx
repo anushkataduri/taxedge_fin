@@ -29,23 +29,40 @@ export function OTPVerificationScreen() {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
   const inputRef = useRef<TextInput>(null);
+  const isMounted = useRef(true);
+  const verifyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (verifyTimeout.current) clearTimeout(verifyTimeout.current);
+    };
+  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
     if (timer > 0) {
       interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        if (isMounted.current) {
+          setTimer((prev) => prev - 1);
+        }
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [timer]);
 
   const handleVerifyOtp = () => {
     setError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      router.push("/(auth)/createprofile");
+    if (verifyTimeout.current) clearTimeout(verifyTimeout.current);
+    verifyTimeout.current = setTimeout(() => {
+      if (isMounted.current) {
+        setLoading(false);
+        router.push("/(auth)/createprofile");
+      }
     }, 250);
   };
 

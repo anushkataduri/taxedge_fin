@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   View,
@@ -8,14 +9,12 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Image,
   Alert,
   Modal,
   ActivityIndicator,
   type TextInputProps,
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Svg, { Path } from "react-native-svg";
@@ -25,8 +24,6 @@ import { useAuthStore } from "../../store/authStore";
 import { styles } from "../../styles/app/(auth)/create-profile.styles";
 import type { IconName, ProfileFormValues } from "../../types/domain";
 
-const SCROLL_INSET_OFFSET = Spacing.xxl + Spacing.xl + Spacing.xs; // 60
-const MIN_SCROLL_BOTTOM = Spacing.xxl * 2 + Spacing.base; // 80
 const HEADER_INSET_TOP_OFFSET = Spacing.sm; // 8
 const MIN_HEADER_TOP = Spacing.xl; // 24
 
@@ -47,10 +44,9 @@ export default function CreateProfileScreen() {
   const colors = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { register, setAvatar } = useAuthStore();
+  const { register } = useAuthStore();
 
   // Profile states
-  const [avatarUri, setAvatarUriState] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileErrors, setProfileErrors] = useState<SignupErrors>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -90,33 +86,120 @@ export default function CreateProfileScreen() {
     address: "",
   });
 
-  const handlePickPhoto = () => {
-    Alert.alert("Profile Photo", "Choose an option", [
-      {
-        text: "Take Photo",
-        onPress: async () => {
-          const p = await ImagePicker.requestCameraPermissionsAsync();
-          if (!p.granted) return Alert.alert("Permission needed", "Camera access is required.");
-          const res = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
-          if (!res.canceled && res.assets?.[0]?.uri) setAvatarUriState(res.assets[0].uri);
-        },
-      },
-      {
-        text: "Choose from Gallery",
-        onPress: async () => {
-          const p = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (!p.granted) return Alert.alert("Permission needed", "Gallery access is required.");
-          const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
-          if (!res.canceled && res.assets?.[0]?.uri) setAvatarUriState(res.assets[0].uri);
-        },
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
+
+  const validateField = (key: keyof SignupForm, val: string): string => {
+    switch (key) {
+      case "name":
+        return val.trim() ? "" : "Full name is required";
+      case "email": {
+        const clean = val.trim();
+        if (!clean) return "Email ID is required";
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(clean)) {
+          return "Enter a valid email address";
+        }
+        return "";
+      }
+      case "pan": {
+        const clean = val.trim().toUpperCase();
+        if (!clean) return "PAN number is required";
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(clean)) {
+          return "Enter a valid 10-digit PAN (e.g. ABCDE1234F)";
+        }
+        return "";
+      }
+      case "aadhaar": {
+        const clean = val.replace(/\D/g, "");
+        if (!clean) return "Aadhaar number is required";
+        if (clean.length !== 12 || !/^[2-9]{1}[0-9]{11}$/.test(clean)) {
+          return "Enter a valid 12-digit Aadhaar number";
+        }
+        return "";
+      }
+      case "customerType":
+        return val ? "" : "Account type is required";
+      case "address":
+        return val.trim() ? "" : "Address is required";
+      case "password": {
+        if (!val) return "6-digit passcode is required";
+        if (!/^\d{6}$/.test(val)) return "Passcode must be exactly 6 numeric digits";
+        return "";
+      }
+      case "confirmPassword": {
+        if (!val) return "Confirm passcode is required";
+        if (val !== form.password) return "Passcodes do not match";
+        return "";
+      }
+      case "dob":
+        return val.trim() ? "" : "Date of birth is required";
+      default:
+        return "";
+    }
   };
 
   const updateForm = (key: keyof SignupForm, val: string) => {
     setForm((p) => ({ ...p, [key]: val }));
-    if (profileErrors[key]) setProfileErrors((p) => ({ ...p, [key]: "" }));
+
+    if (key === "pan") {
+      const clean = val.trim().toUpperCase();
+      if (clean.length === 10) {
+        setProfileErrors((p) => ({
+          ...p,
+          pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(clean)
+            ? ""
+            : "Enter a valid 10-digit PAN (e.g. ABCDE1234F)",
+        }));
+      } else if (profileErrors.pan && clean.length < 10) {
+        setProfileErrors((p) => ({ ...p, pan: "" }));
+      }
+    } else if (key === "aadhaar") {
+      const clean = val.replace(/\D/g, "");
+      if (clean.length === 12) {
+        setProfileErrors((p) => ({
+          ...p,
+          aadhaar: /^[2-9]{1}[0-9]{11}$/.test(clean)
+            ? ""
+            : "Enter a valid 12-digit Aadhaar number",
+        }));
+      } else if (profileErrors.aadhaar && clean.length < 12) {
+        setProfileErrors((p) => ({ ...p, aadhaar: "" }));
+      }
+    } else if (key === "email") {
+      if (
+        profileErrors.email &&
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val.trim())
+      ) {
+        setProfileErrors((p) => ({ ...p, email: "" }));
+      }
+    } else if (key === "password") {
+      if (val.length === 6 && profileErrors.password) {
+        setProfileErrors((p) => ({ ...p, password: "" }));
+      }
+      if (form.confirmPassword) {
+        setProfileErrors((p) => ({
+          ...p,
+          confirmPassword: val === form.confirmPassword ? "" : "Passcodes do not match",
+        }));
+      }
+    } else if (key === "confirmPassword") {
+      if (val.length === 6 || val === form.password) {
+        setProfileErrors((p) => ({
+          ...p,
+          confirmPassword: val === form.password ? "" : "Passcodes do not match",
+        }));
+      }
+    } else if (profileErrors[key]) {
+      setProfileErrors((p) => ({ ...p, [key]: "" }));
+    }
+  };
+
+  const handleBlur = (key: keyof SignupForm) => {
+    const val = form[key];
+    if (val && val.trim().length > 0) {
+      const err = validateField(key, val);
+      if (err) {
+        setProfileErrors((p) => ({ ...p, [key]: err }));
+      }
+    }
   };
 
   const handleDobChange = (text: string) => {
@@ -157,23 +240,11 @@ export default function CreateProfileScreen() {
 
   const handleCreateProfile = async () => {
     const errs: SignupErrors = {};
-    if (!form.name.trim()) errs.name = "Full name is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) errs.email = "Valid email is required";
-    if (!form.customerType) errs.customerType = "Customer type is required";
-    if (!form.password) {
-      errs.password = "6-digit passcode is required";
-    } else if (!/^\d{6}$/.test(form.password)) {
-      errs.password = "Passcode must be exactly 6 numeric digits";
-    }
-    if (!form.confirmPassword) {
-      errs.confirmPassword = "Confirm passcode is required";
-    } else if (form.password !== form.confirmPassword) {
-      errs.confirmPassword = "Passcodes do not match";
-    }
-    if (!form.dob.trim()) errs.dob = "Date of birth is required";
-    if (!form.pan.trim() || form.pan.length < 10) errs.pan = "Valid 10-digit PAN is required";
-    if (!form.aadhaar.trim()) errs.aadhaar = "Aadhaar number is required";
-    if (!form.address.trim()) errs.address = "Address is required";
+
+    (Object.keys(form) as (keyof SignupForm)[]).forEach((key) => {
+      const err = validateField(key, form[key]);
+      if (err) errs[key] = err;
+    });
 
     if (Object.keys(errs).length > 0) {
       setProfileErrors(errs);
@@ -189,7 +260,7 @@ export default function CreateProfileScreen() {
           customerType: form.customerType,
           dob: form.dob.trim(),
           pan: form.pan.trim().toUpperCase(),
-          aadhaar: form.aadhaar.trim(),
+          aadhaar: form.aadhaar.replace(/\D/g, ""),
           address: form.address.trim(),
         },
         form.password.trim(),
@@ -198,7 +269,6 @@ export default function CreateProfileScreen() {
 
       setProfileLoading(false);
       if (res.success) {
-        if (avatarUri) setAvatar(avatarUri);
         router.replace("/(main)/home" as any);
       } else {
         Alert.alert("Registration Error", res.error || "Failed to create account.");
@@ -218,7 +288,7 @@ export default function CreateProfileScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.profileScroll,
-          { paddingBottom: Math.max(insets.bottom + SCROLL_INSET_OFFSET, MIN_SCROLL_BOTTOM) },
+          { paddingBottom: Math.max(insets.bottom + Spacing.base, Spacing.lg) },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -245,51 +315,25 @@ export default function CreateProfileScreen() {
             />
           </Svg>
 
-          {/* Back Arrow & Header Titles */}
+          {/* Back Arrow & Centered Header Title */}
           <View
             style={[
               styles.waveHeaderContent,
               { paddingTop: Math.max(insets.top + HEADER_INSET_TOP_OFFSET, MIN_HEADER_TOP) },
             ]}
           >
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => router.back()}
-              style={styles.backBtnWhite}
-            >
-              <Ionicons name="arrow-back" size={24} color={BrandColors.WHITE} />
-            </TouchableOpacity>
+            <View style={styles.headerRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.back()}
+                style={styles.backBtnWhite}
+              >
+                <Ionicons name="arrow-back" size={24} color={BrandColors.WHITE} />
+              </TouchableOpacity>
 
-            <View style={styles.headerTextGroup}>
               <Text style={styles.headerTitleWhite}>Create Account</Text>
-
             </View>
           </View>
-        </View>
-
-        {/* Avatar Section Overlapping Wave */}
-        <View style={styles.avatarSection}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={handlePickPhoto}
-            style={styles.avatarWrap}
-          >
-            <View style={styles.avatarOuterRing}>
-              <View style={styles.avatarInnerCircle}>
-                {avatarUri ? (
-                  <Image
-                    source={{ uri: avatarUri }}
-                    style={styles.avatarImage}
-                  />
-                ) : (
-                  <Ionicons name="camera" size={38} color={BrandColors.PRIMARY_BLUE_DARK} />
-                )}
-              </View>
-            </View>
-            <View style={styles.avatarPlusBadge}>
-              <Ionicons name="add" size={18} color={BrandColors.WHITE} />
-            </View>
-          </TouchableOpacity>
         </View>
 
         {/* Form Fields Section */}
@@ -299,6 +343,7 @@ export default function CreateProfileScreen() {
             leftIcon="person-outline"
             value={form.name}
             onChangeText={(t) => updateForm("name", t)}
+            onBlur={() => handleBlur("name")}
             placeholder="Full Name"
             error={profileErrors.name}
           />
@@ -308,6 +353,7 @@ export default function CreateProfileScreen() {
             leftIcon="mail-outline"
             value={form.email}
             onChangeText={(t) => updateForm("email", t)}
+            onBlur={() => handleBlur("email")}
             placeholder="Email ID"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -319,6 +365,7 @@ export default function CreateProfileScreen() {
             leftIcon="card-outline"
             value={form.pan}
             onChangeText={(t) => updateForm("pan", t.toUpperCase())}
+            onBlur={() => handleBlur("pan")}
             placeholder="PAN Number"
             autoCapitalize="characters"
             maxLength={10}
@@ -329,10 +376,11 @@ export default function CreateProfileScreen() {
           <Field
             leftIcon="newspaper-outline"
             value={form.aadhaar}
-            onChangeText={(t) => updateForm("aadhaar", t)}
+            onChangeText={(t) => updateForm("aadhaar", t.replace(/\D/g, "").slice(0, 12))}
+            onBlur={() => handleBlur("aadhaar")}
             placeholder="Aadhaar Number"
-            keyboardType="numeric"
-            maxLength={14}
+            keyboardType="number-pad"
+            maxLength={12}
             error={profileErrors.aadhaar}
           />
 
@@ -356,7 +404,9 @@ export default function CreateProfileScreen() {
               onPress={() => setShowCustomerTypeModal(true)}
               style={[
                 styles.inputBox,
-                profileErrors.customerType ? { borderColor: Colors.error } : null,
+                profileErrors.customerType
+                  ? { borderColor: Colors.error, backgroundColor: "#FEF2F2" }
+                  : null,
               ]}
             >
               <Ionicons
@@ -371,7 +421,7 @@ export default function CreateProfileScreen() {
                   !form.customerType && { color: BrandColors.TEXT_MUTED },
                 ]}
               >
-                {form.customerType || "Customer Type"}
+                {form.customerType || "Select Account Type"}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -396,16 +446,18 @@ export default function CreateProfileScreen() {
             leftIcon="location-outline"
             value={form.address}
             onChangeText={(t) => updateForm("address", t)}
+            onBlur={() => handleBlur("address")}
             placeholder="Current Address"
             error={profileErrors.address}
           />
 
-          {/* 8. Create 6-Digit Passcode */}
+          {/* 8. Create Passcode */}
           <Field
             leftIcon="lock-closed-outline"
             value={form.password}
             onChangeText={(t) => updateForm("password", t.replace(/\D/g, "").slice(0, 6))}
-            placeholder="Create 6-Digit Passcode (numbers only)"
+            onBlur={() => handleBlur("password")}
+            placeholder="Create Passcode"
             keyboardType="number-pad"
             maxLength={6}
             secureTextEntry={!showPassword}
@@ -419,6 +471,7 @@ export default function CreateProfileScreen() {
             leftIcon="lock-closed-outline"
             value={form.confirmPassword}
             onChangeText={(t) => updateForm("confirmPassword", t.replace(/\D/g, "").slice(0, 6))}
+            onBlur={() => handleBlur("confirmPassword")}
             placeholder="Confirm 6-Digit Passcode"
             keyboardType="number-pad"
             maxLength={6}
@@ -441,14 +494,6 @@ export default function CreateProfileScreen() {
               <Text style={styles.submitBtnText}>Register</Text>
             )}
           </TouchableOpacity>
-
-          {/* Already have an account? Login */}
-          <View style={styles.loginRow}>
-            <Text style={styles.alreadyText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-              <Text style={styles.loginLinkText}>Login</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
 
@@ -624,7 +669,7 @@ export default function CreateProfileScreen() {
           <View style={styles.customerTypeModalContent}>
             <View style={styles.calendarHeader}>
               <Text style={[styles.calendarTitle, { color: "#00204A" }]}>
-                Select Customer Type
+                Select Account Type
               </Text>
               <TouchableOpacity
                 onPress={() => setShowCustomerTypeModal(false)}
@@ -682,18 +727,19 @@ export default function CreateProfileScreen() {
         </View>
       </Modal>
     </KeyboardAvoidingView>
-  );;
+  );
 }
 
 interface FieldProps
   extends Omit<
     TextInputProps,
-    "value" | "onChangeText" | "placeholder" | "style"
+    "value" | "onChangeText" | "placeholder" | "style" | "onBlur"
   > {
   label?: string;
   leftIcon?: IconName;
   value: string;
   onChangeText: (text: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   rightIcon?: IconName;
   onRightIconPress?: () => void;
@@ -705,6 +751,7 @@ function Field({
   leftIcon,
   value,
   onChangeText,
+  onBlur,
   placeholder,
   rightIcon,
   onRightIconPress,
@@ -721,13 +768,19 @@ function Field({
       <View
         style={[
           styles.inputBox,
+          error
+            ? {
+              borderColor: Colors.error,
+              backgroundColor: "#FEF2F2",
+            }
+            : {
+              borderColor: isFocused
+                ? BrandColors.PRIMARY_ORANGE
+                : BrandColors.BORDER,
+              backgroundColor: BrandColors.WHITE,
+            },
           {
-            borderColor: error
-              ? Colors.error
-              : isFocused
-              ? BrandColors.PRIMARY_ORANGE
-              : BrandColors.BORDER,
-            borderWidth: isFocused ? BorderWidth.regular : BorderWidth.thin,
+            borderWidth: isFocused || error ? BorderWidth.regular : BorderWidth.thin,
           },
         ]}
       >
@@ -735,7 +788,7 @@ function Field({
           <Ionicons
             name={leftIcon}
             size={20}
-            color={BrandColors.PRIMARY_ORANGE}
+            color={error ? Colors.error : BrandColors.PRIMARY_ORANGE}
             style={styles.leftIcon}
           />
         )}
@@ -744,7 +797,10 @@ function Field({
           value={value}
           onChangeText={onChangeText}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onBlur={() => {
+            setIsFocused(false);
+            if (onBlur) onBlur();
+          }}
           placeholder={placeholder}
           placeholderTextColor={BrandColors.TEXT_MUTED}
           keyboardType={keyboardType}
