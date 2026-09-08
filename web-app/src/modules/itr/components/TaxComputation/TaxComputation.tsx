@@ -3,6 +3,7 @@ import {
   MOCK_COMPUTATION_DATA,
   type FullComputationModel,
 } from './TaxComputation'
+import { BarChartIcon } from '../ItrIcons'
 import './TaxComputation.css'
 
 export interface TaxComputationProps {
@@ -24,7 +25,9 @@ export const TaxComputation = ({ onApprove }: TaxComputationProps) => {
     <div className="tax-comp-container">
       <div className="tax-comp-hero">
         <div className="tax-comp-hero__badge">
-          <span>📊 Reconciled CA Computation</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <BarChartIcon size={14} strokeWidth={2.2} /> Reconciled CA Computation
+          </span>
           <span>•</span>
           <span>AIS & TIS Matched</span>
         </div>

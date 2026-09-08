@@ -78,21 +78,21 @@ export const TDS_PAYMENT_METHODS: TdsPaymentMethod[] = [
     id: 'upi',
     name: 'UPI',
     subtitle: 'Google Pay, PhonePe, Paytm or any UPI app',
-    icon: '₹',
+    icon: 'upi',
   },
   {
     id: 'debit_card',
     name: 'Debit card',
-    icon: '💳',
+    icon: 'card',
   },
   {
     id: 'credit_card',
     name: 'Credit card',
-    icon: '💳',
+    icon: 'card',
   },
   {
     id: 'net_banking',
     name: 'Net banking',
-    icon: '🏦',
+    icon: 'bank',
   },
 ]

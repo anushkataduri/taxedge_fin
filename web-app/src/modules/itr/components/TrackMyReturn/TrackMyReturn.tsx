@@ -3,6 +3,7 @@ import {
   MOCK_TRACK_RETURNS,
   type ReturnTrackDetails,
 } from './TrackMyReturn'
+import { AlertTriangleIcon } from '../ItrIcons'
 import './TrackMyReturn.css'
 
 export interface TrackMyReturnProps {
@@ -69,9 +70,13 @@ export const TrackMyReturn = ({ initialAck = 'ITR-2026-00074' }: TrackMyReturnPr
             borderRadius: '10px',
             fontWeight: 600,
             fontSize: '0.9rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
           }}
         >
-          ⚠️ {errorMessage}
+          <AlertTriangleIcon size={18} strokeWidth={2} />
+          <span>{errorMessage}</span>
         </div>
       )}
 

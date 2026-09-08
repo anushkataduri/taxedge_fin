@@ -50,7 +50,7 @@ export const ITR_SERVICES_LIST: ItrServiceCard[] = [
     id: 'service_tds_refund',
     title: 'TDS Refund',
     description: 'Claim excess TDS deducted, with a refund estimate up front.',
-    pricing: '15% % of refund',
+    pricing: '15% of refund',
     timeline: '20-45 days to credit',
     icon: 'rupee',
     viewKey: 'tds-refund',

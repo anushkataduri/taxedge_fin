@@ -8,6 +8,16 @@ import {
   ITR_SERVICES_LIST,
 } from '../../services/itrData'
 import type { ItrApplicationItem, ItrViewKey } from '../../types/itr.types'
+import {
+  BarChartIcon,
+  RupeeIcon,
+  ClockIcon,
+  FileTextIcon,
+  ShieldAlertIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ShieldCheckIcon,
+} from '../../components/ItrIcons'
 import './Itr.css'
 
 export const Itr = () => {
@@ -39,32 +49,32 @@ export const Itr = () => {
   const getServiceIcon = (iconType: string) => {
     switch (iconType) {
       case 'bar':
-        return '📊'
+        return <BarChartIcon size={22} strokeWidth={2.2} />
       case 'rupee':
-        return '₹'
+        return <RupeeIcon size={22} strokeWidth={2.2} />
       case 'clock':
-        return '⏱️'
+        return <ClockIcon size={22} strokeWidth={2.2} />
       case 'document':
-        return '📄'
+        return <FileTextIcon size={22} strokeWidth={2.2} />
       case 'warning':
-        return '⚠️'
+        return <ShieldAlertIcon size={22} strokeWidth={2.2} />
       default:
-        return '📌'
+        return <FileTextIcon size={22} strokeWidth={2.2} />
     }
   }
 
   const getStatIcon = (iconType: string) => {
     switch (iconType) {
       case 'calendar':
-        return '📅'
+        return <CalendarIcon size={16} strokeWidth={2.2} />
       case 'check':
-        return '✓'
+        return <CheckCircleIcon size={16} strokeWidth={2.2} />
       case 'rupee':
-        return '₹'
+        return <RupeeIcon size={16} strokeWidth={2.2} />
       case 'notice':
-        return '🛡️'
+        return <ShieldCheckIcon size={16} strokeWidth={2.2} />
       default:
-        return '•'
+        return <CheckCircleIcon size={16} strokeWidth={2.2} />
     }
   }
 
@@ -79,22 +89,6 @@ export const Itr = () => {
         </p>
 
         <div className="itr-hero-banner__actions">
-          <button
-            type="button"
-            className="itr-hero-btn-primary"
-            onClick={() => navigate(routePaths.itr.fileItr)}
-          >
-            File ITR for AY 2026-27
-          </button>
-
-          <button
-            type="button"
-            className="itr-hero-btn-secondary"
-            onClick={() => navigate(routePaths.itr.trackMyReturn)}
-          >
-            Track my return
-          </button>
-
           <button
             type="button"
             className="itr-hero-btn-accent"
@@ -136,7 +130,7 @@ export const Itr = () => {
               <div className="itr-service-card__price-box">
                 <span className="itr-service-card__price">{service.pricing}</span>
                 <span className="itr-service-card__timeline">
-                  <span>⏱</span> {service.timeline}
+                  <ClockIcon size={13} strokeWidth={2.2} /> {service.timeline}
                 </span>
               </div>
 
@@ -211,14 +205,6 @@ export const Itr = () => {
             </p>
           </div>
         </div>
-
-        <div className="itr-estimator-note">
-          <span style={{ fontSize: '1.15rem' }}>ℹ️</span>
-          <div>
-            <strong>Estimate only</strong> · The final figure is confirmed by your tax executive after
-            reconciling Form 26AS, AIS and TIS.
-          </div>
-        </div>
       </section>
 
       {/* 5. Your ITR Applications */}
@@ -232,8 +218,12 @@ export const Itr = () => {
             onClick={() => navigate(routePaths.itr.trackMyReturn)}
           >
             <div className="itr-apps-info">
-              <div className="itr-apps-icon-box">
-                {app.statusTone === 'warning' ? '📊' : '₹'}
+              <div className={`itr-apps-icon-box itr-apps-icon-box--${app.statusTone}`}>
+                {app.statusTone === 'warning' ? (
+                  <BarChartIcon size={22} strokeWidth={2.2} />
+                ) : (
+                  <RupeeIcon size={22} strokeWidth={2.2} />
+                )}
               </div>
               <div className="itr-apps-details">
                 <h4 className="itr-apps-name">{app.title}</h4>

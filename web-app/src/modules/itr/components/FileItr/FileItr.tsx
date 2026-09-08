@@ -4,6 +4,7 @@ import {
   INITIAL_FILE_ITR_STATE,
   type FileItrFormData,
 } from './FileItr'
+import { ShieldCheckIcon } from '../ItrIcons'
 import './FileItr.css'
 
 export interface FileItrProps {
@@ -63,7 +64,9 @@ export const FileItr = ({ onSuccessFiling }: FileItrProps) => {
     <div className="file-itr-container">
       <div className="file-itr-hero">
         <div className="file-itr-hero__badge">
-          <span>🛡️ Verified CA Filing</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <ShieldCheckIcon size={14} strokeWidth={2.2} /> Verified CA Filing
+          </span>
           <span>•</span>
           <span>AY 2026-27 (FY 2025-26)</span>
         </div>

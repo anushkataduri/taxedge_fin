@@ -5,6 +5,16 @@ import {
   TDS_PAYMENT_METHODS,
   type TdsPaymentMethod,
 } from './TdsRefund'
+import {
+  RupeeIcon,
+  UploadIcon,
+  CheckIcon,
+  FileTextIcon,
+  AlertTriangleIcon,
+  CreditCardIcon,
+  BankIcon,
+  MailIcon,
+} from '../ItrIcons'
 
 /* =========================================================
    Screen 1: Intro / 3-Step Overview
@@ -45,7 +55,9 @@ export const TdsStep1View = () => (
     </div>
 
     <div className="tds-no-fee-banner">
-      <div className="tds-no-fee-icon">₹</div>
+      <div className="tds-no-fee-icon">
+        <RupeeIcon size={18} strokeWidth={2.5} />
+      </div>
       <div>
         <div className="tds-no-fee-title">No refund, no fee</div>
         <div className="tds-no-fee-desc">
@@ -92,12 +104,17 @@ const TdsChecklistRow = ({
         aria-label={`Upload ${doc.name}`}
       />
       <div className="tds-upload-row-left">
-        <div className="tds-upload-icon">{isUploaded ? '✓' : '↑'}</div>
+        <div className="tds-upload-icon">
+          {isUploaded ? <CheckIcon size={16} strokeWidth={2.5} /> : <UploadIcon size={16} strokeWidth={2.5} />}
+        </div>
         <div>
           <div className="tds-upload-name">{doc.name}</div>
           {fileInfo ? (
             <div className="tds-uploaded-file-meta">
-              <span className="tds-uploaded-filename">📄 {fileInfo.name}</span>
+              <span className="tds-uploaded-filename">
+                <FileTextIcon size={13} strokeWidth={2} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
+                {fileInfo.name}
+              </span>
               <span className="tds-uploaded-filesize">({fileInfo.size})</span>
             </div>
           ) : (
@@ -162,7 +179,9 @@ export const TdsStep2View = ({
 
       {uploadError && (
         <div className="tds-validation-error-box">
-          <span className="tds-validation-error-icon">⚠️</span>
+          <span className="tds-validation-error-icon">
+            <AlertTriangleIcon size={16} strokeWidth={2} />
+          </span>
           <span className="tds-validation-error-text">{uploadError}</span>
         </div>
       )}
@@ -263,42 +282,55 @@ export const TdsStep4View = ({
   selectedPaymentId,
   onSelectPayment,
   onPayFee,
-}: Step4Props) => (
-  <>
-    <div>
-      <h2 className="tds-flow-card-heading">Pay the 15% fee</h2>
-      <p className="tds-flow-card-subheading">
-        Once paid, your refund claim enters the TDS queue.
-      </p>
-    </div>
+}: Step4Props) => {
+  const renderPaymentIcon = (icon: string) => {
+    switch (icon) {
+      case 'card':
+        return <CreditCardIcon size={18} strokeWidth={2} />
+      case 'bank':
+        return <BankIcon size={18} strokeWidth={2} />
+      case 'upi':
+      default:
+        return <RupeeIcon size={18} strokeWidth={2.2} />
+    }
+  }
 
-    <div className="tds-payment-layout">
-      {/* Payment Options */}
-      <div className="tds-payment-options-list">
-        {TDS_PAYMENT_METHODS.map((method: TdsPaymentMethod) => {
-          const isSelected = method.id === selectedPaymentId
-          return (
-            <div
-              key={method.id}
-              className={`tds-payment-card ${isSelected ? 'tds-payment-card--selected' : ''}`}
-              onClick={() => onSelectPayment(method.id)}
-            >
-              <div className="tds-payment-card-left">
-                <div className="tds-payment-icon">{method.icon}</div>
-                <div>
-                  <div className="tds-payment-name">{method.name}</div>
-                  {method.subtitle && (
-                    <div className="tds-payment-sub">{method.subtitle}</div>
-                  )}
+  return (
+    <>
+      <div>
+        <h2 className="tds-flow-card-heading">Pay the 15% fee</h2>
+        <p className="tds-flow-card-subheading">
+          Once paid, your refund claim enters the TDS queue.
+        </p>
+      </div>
+
+      <div className="tds-payment-layout">
+        {/* Payment Options */}
+        <div className="tds-payment-options-list">
+          {TDS_PAYMENT_METHODS.map((method: TdsPaymentMethod) => {
+            const isSelected = method.id === selectedPaymentId
+            return (
+              <div
+                key={method.id}
+                className={`tds-payment-card ${isSelected ? 'tds-payment-card--selected' : ''}`}
+                onClick={() => onSelectPayment(method.id)}
+              >
+                <div className="tds-payment-card-left">
+                  <div className="tds-payment-icon">{renderPaymentIcon(method.icon)}</div>
+                  <div>
+                    <div className="tds-payment-name">{method.name}</div>
+                    {method.subtitle && (
+                      <div className="tds-payment-sub">{method.subtitle}</div>
+                    )}
+                  </div>
+                </div>
+                <div className="tds-payment-radio">
+                  {isSelected && <div className="tds-payment-radio-dot" />}
                 </div>
               </div>
-              <div className="tds-payment-radio">
-                {isSelected && <div className="tds-payment-radio-dot" />}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
 
       {/* Fee Summary */}
       <div className="tds-fee-summary-card">
@@ -328,7 +360,8 @@ export const TdsStep4View = ({
       </button>
     </div>
   </>
-)
+  )
+}
 
 /* =========================================================
    Screen 5: Status View
@@ -377,7 +410,9 @@ export const TdsStep5View = () => (
 
     {/* Notification Alert Box */}
     <div className="tds-notif-box">
-      <div className="tds-notif-icon">✉️</div>
+      <div className="tds-notif-icon">
+        <MailIcon size={20} strokeWidth={2} />
+      </div>
       <div>
         <div className="tds-notif-title">You will be notified</div>
         <div className="tds-notif-desc">
