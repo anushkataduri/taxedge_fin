@@ -67,3 +67,48 @@ export interface GstListFilters {
   status?: ApplicationStatus
   search?: string
 }
+export type GstAmendmentFieldKey =
+  | 'business_address'
+  | 'business_name'
+  | 'authorized_signatory'
+  | 'bank_account'
+  | 'additional_place'
+  | 'contact_details'
+  | 'business_constitution'
+
+export interface GstAmendmentPayload {
+  gstin: string
+  fieldBeingChanged: string
+  fieldKey: GstAmendmentFieldKey
+  oldValue: string
+  newValue: string
+  supportingDocumentName?: string
+  supportingDocumentFile?: File | null
+}
+
+export interface GstAmendmentRecord extends Timestamped {
+  id: string
+  reference: string
+  gstin: string
+  fieldBeingChanged: string
+  oldValue: string
+  newValue: string
+  status: ApplicationStatus
+  supportingDocument?: string
+}
+
+export interface GstCertificatePayload {
+  gstin: string
+  registeredContact: string
+  requestType: string
+}
+
+export interface GstCertificateRecord extends Timestamped {
+  id: string
+  reference: string
+  gstin: string
+  registeredContact: string
+  requestType: string
+  status: ApplicationStatus
+  downloadUrl?: string
+}

@@ -64,7 +64,7 @@ export const ALL_SERVICES: ServiceItem[] = [
     pricingType: 'Per change',
     turnaround: '5–7 working days',
     iconType: 'gst-amend',
-    route: '/gst',
+    route: '/gst/amendment',
   },
   {
     id: 'gst-certificate',

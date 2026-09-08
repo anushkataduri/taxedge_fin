@@ -224,6 +224,18 @@ export const DashboardLayout = () => {
                   <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
                   <span className="shell__breadcrumb-current">Track Application</span>
                 </>
+              ) : location.pathname === routePaths.gst.amendment ? (
+                <>
+                  <Link to={routePaths.gst.root}>GST</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  <span className="shell__breadcrumb-current">Amendment</span>
+                </>
+              ) : location.pathname === routePaths.gst.certificate ? (
+                <>
+                  <Link to={routePaths.gst.root}>GST</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  <span className="shell__breadcrumb-current">Certificate</span>
+                </>
               ) : location.pathname === routePaths.gst.compliance ||
                 location.pathname === routePaths.gst.complianceSubmitted ||
                 (location.pathname.startsWith(routePaths.gst.compliance) && (location.search.includes('submitted') || location.pathname.includes('submitted'))) ? (
