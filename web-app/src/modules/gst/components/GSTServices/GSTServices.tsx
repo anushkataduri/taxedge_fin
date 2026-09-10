@@ -66,6 +66,14 @@ export const GSTServices = ({ services }: GSTServicesProps) => {
       navigate(routePaths.gst.registration);
     } else if (service.iconType === 'filing' || service.id === '2') {
       navigate(routePaths.gst.filing);
+    } else if (service.iconType === 'compliance' || service.id === '3') {
+      navigate(routePaths.gst.compliance);
+    } else if (service.iconType === 'cancellation' || service.id === '4') {
+      navigate(routePaths.gst.cancellation);
+    } else if (service.iconType === 'amendment' || service.id === '5') {
+      navigate(routePaths.gst.amendment);
+    } else if (service.iconType === 'certificate' || service.id === '6') {
+      navigate(routePaths.gst.certificate);
     } else {
       navigate(routePaths.gst.registration);
     }
@@ -74,7 +82,19 @@ export const GSTServices = ({ services }: GSTServicesProps) => {
   return (
     <div className="gst-services-grid">
       {services.map((service, index) => (
-        <div key={service.id} className="gst-service-card">
+        <div
+          key={service.id}
+          className="gst-service-card"
+          onClick={() => handleStart(service)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleStart(service);
+            }
+          }}
+        >
           <div className={`gst-service-card__icon ${index % 2 === 0 ? 'icon-blue' : 'icon-orange'}`}>
             {getServiceIcon(service.iconType)}
           </div>

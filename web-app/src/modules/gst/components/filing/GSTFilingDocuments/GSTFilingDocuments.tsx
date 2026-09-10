@@ -42,11 +42,40 @@ export const GSTFilingDocuments = ({
   const [docs, setDocs] = useState<FilingDocItem[]>(() => getInitialDocs(displayMonth))
   const [isDragging, setIsDragging] = useState(false)
   const [previewDoc, setPreviewDoc] = useState<FilingDocItem | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const verifiedCount = docs.filter((d) => d.status === 'ok').length
   const effectiveBaseFee = baseFee > 0 ? baseFee : 2500
   const gstAmount = Math.round(effectiveBaseFee * 0.18)
   const totalPayable = effectiveBaseFee + gstAmount
+
+  const handleVerifyAllRequired = () => {
+    setDocs((prev) =>
+      prev.map((doc) =>
+        ['1', '2', '6'].includes(doc.id)
+          ? {
+              ...doc,
+              status: 'ok' as const,
+              progress: 100,
+              details: doc.details.includes('verified') ? doc.details : `${doc.details.split(' · ')[0]} · verified`,
+            }
+          : doc
+      )
+    )
+    setValidationError(null)
+  }
+
+  const handleProceedToReview = () => {
+    const mandatoryIds = ['1', '2', '6']
+    const unverified = docs.filter((d) => mandatoryIds.includes(d.id) && d.status !== 'ok')
+    if (unverified.length > 0) {
+      const names = unverified.map((d) => d.title.split(' — ')[0]).join(', ')
+      setValidationError(`Required documents (${names}) must be verified before continuing.`)
+      return
+    }
+    setValidationError(null)
+    onNext()
+  }
 
   const formatFileSize = (bytes: number): string => {
     const mb = (bytes / (1024 * 1024)).toFixed(1)
@@ -131,6 +160,19 @@ export const GSTFilingDocuments = ({
             </label>
           </div>
 
+          {validationError && (
+            <div className="gst-docs-validation-alert" role="alert">
+              <span>⚠️ {validationError}</span>
+              <button
+                type="button"
+                className="gst-docs-validation-alert__btn"
+                onClick={handleVerifyAllRequired}
+              >
+                Verify Remaining Files
+              </button>
+            </div>
+          )}
+
           <section className="gst-docs-checklist-card">
             <h2 className="gst-docs-checklist-title">Checklist</h2>
             <div className="gst-docs-checklist-list">
@@ -138,8 +180,11 @@ export const GSTFilingDocuments = ({
                 const isVerified = doc.status === 'ok'
                 const isUploading = doc.status === 'up'
                 const isPending = doc.status === 'pend'
+                const isMandatory = ['1', '2', '6'].includes(doc.id)
+                const isHighlightedError = Boolean(validationError && isMandatory && !isVerified)
+
                 return (
-                  <div key={doc.id} className="gst-docs-item">
+                  <div key={doc.id} className={`gst-docs-item ${isHighlightedError ? 'gst-docs-item--unverified' : ''}`}>
                     <div className="gst-docs-item__left">
                       <div className={`gst-docs-item__icon-box ${isVerified ? 'gst-docs-item__icon-box--verified' : isUploading ? 'gst-docs-item__icon-box--uploading' : ''}`} aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isVerified ? 3 : 2} strokeLinecap="round" strokeLinejoin="round">
@@ -147,7 +192,9 @@ export const GSTFilingDocuments = ({
                         </svg>
                       </div>
                       <div className="gst-docs-item__meta">
-                        <span className="gst-docs-item__name">{doc.title}</span>
+                        <span className="gst-docs-item__name">
+                          {doc.title} {isMandatory && <span style={{ color: '#ef4444' }}>*</span>}
+                        </span>
                         <span className="gst-docs-item__details">{doc.details}</span>
                         {isUploading && (
                           <div className="gst-docs-progress-track">
@@ -177,7 +224,7 @@ export const GSTFilingDocuments = ({
 
           <div className="gst-docs-actions">
             <button type="button" className="gst-docs-btn-back" onClick={onBack}>← Back</button>
-            <button type="button" className="gst-docs-btn-continue" onClick={onNext}>Continue to review →</button>
+            <button type="button" className="gst-docs-btn-continue" onClick={handleProceedToReview}>Continue to review →</button>
           </div>
         </main>
 

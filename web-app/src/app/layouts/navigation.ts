@@ -25,7 +25,7 @@ export const navSections: NavSection[] = [
     title: 'Services',
     items: [
       { label: 'GST', to: routePaths.gst.root, icon: '%' },
-      { label: 'ITR & TDS', to: routePaths.itr, icon: '₹' },
+      { label: 'ITR & TDS', to: routePaths.itr.root, icon: '₹' },
       { label: 'Loans', to: routePaths.loans, icon: '◈' },
       { label: 'Insurance', to: routePaths.insurance, icon: '☂' },
     ],

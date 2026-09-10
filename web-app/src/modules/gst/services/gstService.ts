@@ -3,7 +3,11 @@ import { AppError } from '@core/errors'
 
 import { gstApi } from '../api/gstApi'
 import type {
+  GstAmendmentPayload,
+  GstAmendmentRecord,
   GstApplication,
+  GstCertificatePayload,
+  GstCertificateRecord,
   GstListFilters,
   GstRegistrationPayload,
   GstReturn,
@@ -158,5 +162,62 @@ export const gstService = {
       }
     }
     return gstApi.fileReturn(payload)
+  },
+
+  async submitAmendment(payload: GstAmendmentPayload): Promise<GstAmendmentRecord> {
+    if (env.enableMocks) {
+      await delay(600)
+      return {
+        id: `amend_${Date.now()}`,
+        reference: `GST-AMD-${Math.floor(Math.random() * 90000 + 10000)}`,
+        gstin: payload.gstin,
+        fieldBeingChanged: payload.fieldBeingChanged,
+        oldValue: payload.oldValue,
+        newValue: payload.newValue,
+        status: 'SUBMITTED',
+        supportingDocument: payload.supportingDocumentName || 'document.pdf',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    }
+    return {
+      id: `amend_${Date.now()}`,
+      reference: `GST-AMD-${Math.floor(Math.random() * 90000 + 10000)}`,
+      gstin: payload.gstin,
+      fieldBeingChanged: payload.fieldBeingChanged,
+      oldValue: payload.oldValue,
+      newValue: payload.newValue,
+      status: 'SUBMITTED',
+      supportingDocument: payload.supportingDocumentName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  },
+  async submitCertificateRequest(payload: GstCertificatePayload): Promise<GstCertificateRecord> {
+    if (env.enableMocks) {
+      await delay(500)
+      return {
+        id: `cert_${Date.now()}`,
+        reference: `GST-CRT-${Math.floor(Math.random() * 90000 + 10000)}`,
+        gstin: payload.gstin,
+        registeredContact: payload.registeredContact,
+        requestType: payload.requestType,
+        status: 'COMPLETED',
+        downloadUrl: '/sample-gst-certificate.pdf',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    }
+    return {
+      id: `cert_${Date.now()}`,
+      reference: `GST-CRT-${Math.floor(Math.random() * 90000 + 10000)}`,
+      gstin: payload.gstin,
+      registeredContact: payload.registeredContact,
+      requestType: payload.requestType,
+      status: 'COMPLETED',
+      downloadUrl: '/sample-gst-certificate.pdf',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
   },
 }

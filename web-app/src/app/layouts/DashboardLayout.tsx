@@ -224,8 +224,80 @@ export const DashboardLayout = () => {
                   <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
                   <span className="shell__breadcrumb-current">Track Application</span>
                 </>
+              ) : location.pathname === routePaths.gst.amendment ? (
+                <>
+                  <Link to={routePaths.gst.root}>GST</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  <span className="shell__breadcrumb-current">Amendment</span>
+                </>
+              ) : location.pathname === routePaths.gst.certificate ? (
+                <>
+                  <Link to={routePaths.gst.root}>GST</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  <span className="shell__breadcrumb-current">Certificate</span>
+                </>
+              ) : location.pathname === routePaths.gst.compliance ||
+                location.pathname === routePaths.gst.complianceSubmitted ||
+                (location.pathname.startsWith(routePaths.gst.compliance) && (location.search.includes('submitted') || location.pathname.includes('submitted'))) ? (
+                <>
+                  <Link to={routePaths.gst.root}>GST</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  {location.pathname === routePaths.gst.complianceSubmitted || location.search.includes('submitted') ? (
+                    <>
+                      <Link to={routePaths.gst.compliance}>Compliance</Link>
+                      <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                      <span className="shell__breadcrumb-current">Submitted</span>
+                    </>
+                  ) : (
+                    <span className="shell__breadcrumb-current">Compliance</span>
+                  )}
+                </>
+              ) : location.pathname === routePaths.gst.cancellation ||
+                location.pathname === routePaths.gst.cancellationSubmitted ||
+                (location.pathname.startsWith(routePaths.gst.cancellation) && (location.search.includes('submitted') || location.pathname.includes('submitted'))) ? (
+                <>
+                  <Link to={routePaths.gst.root}>GST</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  {location.pathname === routePaths.gst.cancellationSubmitted || location.search.includes('submitted') ? (
+                    <>
+                      <Link to={routePaths.gst.cancellation}>Cancellation</Link>
+                      <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                      <span className="shell__breadcrumb-current">Submitted</span>
+                    </>
+                  ) : (
+                    <span className="shell__breadcrumb-current">Cancellation</span>
+                  )}
+                </>
               ) : location.pathname === routePaths.gst.root ? (
                 <span className="shell__breadcrumb-current">GST</span>
+              ) : location.pathname.startsWith('/itr/') ? (
+                <>
+                  <Link to={routePaths.itr.root}>ITR &amp; TDS</Link>
+                  <span className="shell__breadcrumb-sep" aria-hidden="true">→</span>
+                  <span className="shell__breadcrumb-current">
+                    {location.pathname === routePaths.itr.fileItr
+                      ? 'File ITR'
+                      : location.pathname === routePaths.itr.trackMyReturn
+                        ? 'Track Return'
+                        : location.pathname === routePaths.itr.itrFiling
+                          ? 'ITR Filing'
+                          : location.pathname === routePaths.itr.tdsRefund
+                            ? 'TDS Refund'
+                            : location.pathname === routePaths.itr.previousYearItr
+                              ? 'Previous Year ITR'
+                              : location.pathname === routePaths.itr.revisedItr
+                                ? 'Revised ITR'
+                                : location.pathname === routePaths.itr.taxNoticeAssistance
+                                  ? 'Notice Assistance'
+                                  : location.pathname === routePaths.itr.tdsRefundEstimator
+                                    ? 'TDS Refund Estimator'
+                                    : location.pathname === routePaths.itr.taxComputation
+                                      ? 'Tax Computation'
+                                      : 'Filing'}
+                  </span>
+                </>
+              ) : location.pathname === routePaths.itr.root ? (
+                <span className="shell__breadcrumb-current">ITR &amp; TDS</span>
               ) : currentNav.sectionTitle === 'Services' ? (
                 <>
                   <Link to={routePaths.services}>Services</Link>

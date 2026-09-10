@@ -18,9 +18,19 @@ export const GSTFilingReview = ({
   onApprove,
 }: GSTFilingReviewProps) => {
   const [agreed, setAgreed] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const gstAmount = Math.round(baseFee * 0.18)
   const totalPayable = baseFee + gstAmount
+
+  const handleApproveClick = () => {
+    if (!agreed) {
+      setError('Please check the declaration box to authorize TaxEdge to file your GST return.')
+      return
+    }
+    setError(null)
+    onApprove()
+  }
 
   const outwardSupplies = [
     { desc: 'B2B supplies', taxable: 1284000, cgst: 115560, sgst: 115560, igst: 0 },
@@ -118,13 +128,21 @@ export const GSTFilingReview = ({
               <input
                 type="checkbox"
                 checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
+                onChange={(e) => {
+                  setAgreed(e.target.checked)
+                  if (e.target.checked) setError(null)
+                }}
                 className="gst-review-checkbox"
               />
               <span>
                 I have reviewed the figures above and confirm they reflect my books for {selectedMonth}. I authorise TaxEdge to file GSTR-1 and GSTR-3B on my behalf.
               </span>
             </label>
+            {error && (
+              <p style={{ margin: '0.75rem 0 0 0', color: '#b91c1c', fontSize: '0.84rem', fontWeight: 600 }}>
+                ⚠️ {error}
+              </p>
+            )}
           </section>
 
           {/* Actions */}
@@ -139,8 +157,7 @@ export const GSTFilingReview = ({
             <button
               type="button"
               className="gst-review-btn-continue"
-              disabled={!agreed}
-              onClick={onApprove}
+              onClick={handleApproveClick}
             >
               Approve &amp; pay →
             </button>
